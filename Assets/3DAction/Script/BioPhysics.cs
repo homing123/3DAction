@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 
 public class BioPhysics : MonoBehaviour
 {
@@ -11,13 +12,27 @@ public class BioPhysics : MonoBehaviour
 
     public Vector3 Velocity { get { return m_CurVelocity; }  set { m_CurVelocity = value; } }
     public bool IsGround { get { return m_IsGround; } }
-    
+    bool m_LastIsGround;
+
+    public event Action OnLand;
     private void Awake()
     {
         m_Rigid = GetComponent<Rigidbody>();
     }
+    private void Start()
+    {
+        GroundCheck();
+        m_LastIsGround = m_IsGround;
+    }
+    private void Update()
+    {
+        if(m_LastIsGround == false && m_IsGround == true)
+        {
+            OnLand?.Invoke();
+        }
+        m_LastIsGround = m_IsGround;
 
-    
+    }
     private void FixedUpdate()
     {
         m_Rigid.linearVelocity = Vector3.zero;

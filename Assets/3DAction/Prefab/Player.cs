@@ -24,7 +24,6 @@ public class Player : MonoBehaviour
     Vector3 m_MoveDir = Vector3.forward;
     MOVE_TYPE m_MoveType = MOVE_TYPE.WALK;
     float m_CurJumpDelay;
-    bool m_LastIsGround;
     private void Awake()
     {
         Ins = this;
@@ -32,6 +31,10 @@ public class Player : MonoBehaviour
         m_BioAnim = GetComponent<BioAnim>();
     }
 
+    private void Start()
+    {
+        m_BioPhysics.OnLand += OnLand;
+    }
     private void Update()
     {
         if (m_CurJumpDelay > 0)
@@ -85,11 +88,7 @@ public class Player : MonoBehaviour
                 {
                     Move();
                 }
-                if (m_LastIsGround == false && m_BioPhysics.IsGround == true)
-                {
-                    OnFallingEnd();
-                }
-                m_LastIsGround = m_BioPhysics.IsGround;
+               
                 break;
         }
         RotationToMoveDir();
@@ -112,17 +111,14 @@ public class Player : MonoBehaviour
         {
             return;
         }
-
         MoveTypeChange(MOVE_TYPE.JUMP);
         m_BioAnim.SetAnimTrigger(ANIM_TRIGGER.JUMP);
         m_CurJumpDelay = JumpDelay;
         m_BioPhysics.Velocity = new Vector3(m_BioPhysics.Velocity.x, m_JumpPower, m_BioPhysics.Velocity.z);
-
     }
-    void OnFallingEnd()
+    void OnLand()
     {
         m_MoveType = MOVE_TYPE.WALK;
-
     }
     void RotationToMoveDir()
     {

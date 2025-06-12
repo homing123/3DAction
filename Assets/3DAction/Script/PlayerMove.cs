@@ -8,12 +8,12 @@ public enum MOVE_TYPE
 }
 [RequireComponent(typeof(BioAnim))]
 [RequireComponent(typeof(BioPhysics))]
-public class Player : MonoBehaviour
+public class PlayerMove : MonoBehaviour
 {
     public const float MoveDirRotSpeed = 720;
-    const float JumpDelay = 0.1f;
+    public const float JumpDelay = 0.1f;
 
-    public static Player Ins;
+    public static PlayerMove Ins;
     BioPhysics m_BioPhysics;
     BioAnim m_BioAnim;
 
@@ -114,7 +114,8 @@ public class Player : MonoBehaviour
         MoveTypeChange(MOVE_TYPE.JUMP);
         m_BioAnim.SetAnimTrigger(ANIM_TRIGGER.JUMP);
         m_CurJumpDelay = JumpDelay;
-        m_BioPhysics.Velocity = new Vector3(m_BioPhysics.Velocity.x, m_JumpPower, m_BioPhysics.Velocity.z);
+        m_BioPhysics.Jump(m_JumpPower);
+        //m_BioPhysics.Velocity = new Vector3(m_BioPhysics.Velocity.x, m_JumpPower, m_BioPhysics.Velocity.z);
     }
     void OnLand()
     {
@@ -127,5 +128,7 @@ public class Player : MonoBehaviour
         float maxDegree = MoveDirRotSpeed * Time.deltaTime;
         transform.rotation = Quaternion.RotateTowards(curRot, lookRot, maxDegree);
     }
+
+ 
 
 }

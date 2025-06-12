@@ -5,7 +5,7 @@ public class PlayerCam : MonoBehaviour
     const string MouseY = "Mouse Y";
     const string MouseX = "Mouse X";
     public static PlayerCam Ins;
-    Player m_Player;
+    PlayerMove m_Player;
     float m_CurRotY;
 
     [SerializeField] float m_MouseRotSpeed;
@@ -27,7 +27,7 @@ public class PlayerCam : MonoBehaviour
 
     void Start()
     {
-        m_Player = Player.Ins;
+        m_Player = PlayerMove.Ins;
     }
 
     // Update is called once per frame

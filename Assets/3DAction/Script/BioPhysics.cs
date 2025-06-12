@@ -13,6 +13,7 @@ public class BioPhysics : MonoBehaviour
     public Vector3 Velocity { get { return m_CurVelocity; }  set { m_CurVelocity = value; } }
     public bool IsGround { get { return m_IsGround; } }
     bool m_LastIsGround;
+    float m_CurJumpDelay;
 
     public event Action OnLand;
     private void Awake()
@@ -68,7 +69,45 @@ public class BioPhysics : MonoBehaviour
     }
     void GroundCheck()
     {
-        m_IsGround = Physics.Raycast(m_Rigid.position + new Vector3(0, 0.2f, 0), Vector3.down, GroundCheckMargin + 0.2f, (1 << (int)LAYER.OBJECT | 1 << (int)LAYER.GROUND));
+        if(m_CurJumpDelay > 0)
+        {
+            m_CurJumpDelay -= Time.fixedDeltaTime;
+            return;
+        }
+        Vector3 rayStartPos = m_Rigid.position + new Vector3(0, 0.5f, 0);
+        Vector3 halfExSize = new Vector3(0.2f, 0.05f, 0.2f);
+        bool isGround = Physics.BoxCast(rayStartPos, halfExSize, Vector3.down, out RaycastHit hit, Quaternion.Euler(0, transform.rotation.y, 0), 0.5f, (1 << (int)LAYER.OBJECT | 1 << (int)LAYER.GROUND));
+
+        if (isGround) 
+        {
+            Debug.Log(hit.transform.name + " " + hit.normal);
+        }
+        else
+        {
+            Debug.Log("충돌x");
+        }
+        //m_IsGround = Physics.Raycast(m_Rigid.position + new Vector3(0, 0.2f, 0), Vector3.down, out RaycastHit hit, GroundCheckMargin + 0.2f, (1 << (int)LAYER.OBJECT | 1 << (int)LAYER.GROUND));
+        //if(m_IsGround)
+        //{
+        //    hit = 
+        //}
+        m_IsGround = isGround;
+    }
+    
+    public void Jump(float jumpVelo)
+    {
+        m_IsGround = false;
+        m_CurVelocity = new Vector3(m_CurVelocity.x, jumpVelo, m_CurVelocity.z);
+        m_CurJumpDelay = PlayerMove.JumpDelay;
+    }
+
+    private void OnDrawGizmos()
+    {
+        //if(Physics.BoxCast(transform.position, Vector3.one, Vector3.forward, out RaycastHit hit,Quaternion.identity,5, (1 << (int)LAYER.OBJECT | 1 << (int)LAYER.GROUND)))
+        //{
+        //    Debug.Log("충돌"+ hit.transform.name+" " +hit.point);
+        //    Gizmos.DrawWireCube(hit.point, Vector3.one * 2);
+        //}
     }
 
 }

@@ -1,0 +1,59 @@
+using UnityEngine;
+
+public class BioPhysics : MonoBehaviour
+{
+    const float Gravity = 12.0f;
+    const float DecelerationValue = 0.5f;
+    public const float GroundCheckMargin = 0.02f;
+    Rigidbody m_Rigid;
+    Vector3 m_CurVelocity;
+    bool m_IsGround;
+
+    public Vector3 Velocity { get { return m_CurVelocity; }  set { m_CurVelocity = value; } }
+    public bool IsGround { get { return m_IsGround; } }
+    
+    private void Awake()
+    {
+        m_Rigid = GetComponent<Rigidbody>();
+    }
+
+    
+    private void FixedUpdate()
+    {
+        m_Rigid.linearVelocity = Vector3.zero;
+        Move();
+        GroundCheck();
+        VelocityFixedUpdate();
+    }
+    void Move()
+    {
+        if (m_CurVelocity != Vector3.zero)
+        {
+            m_Rigid.MovePosition(m_Rigid.position + m_CurVelocity * Time.fixedDeltaTime);
+        }
+    }
+    void VelocityFixedUpdate()
+    {
+        if (m_CurVelocity.x != 0 || m_CurVelocity.z != 0)
+        {
+            m_CurVelocity.x = m_CurVelocity.x * DecelerationValue;
+            m_CurVelocity.z = m_CurVelocity.z * DecelerationValue;
+            m_CurVelocity.x = Mathf.Abs(m_CurVelocity.x) < 0.1f ? 0 : m_CurVelocity.x;
+            m_CurVelocity.z = Mathf.Abs(m_CurVelocity.z) < 0.1f ? 0 : m_CurVelocity.z;
+        }
+
+        if (m_IsGround == false)
+        {
+            m_CurVelocity.y -= Gravity * Time.fixedDeltaTime;
+        }
+        else
+        {
+            m_CurVelocity.y = 0;
+        }
+    }
+    void GroundCheck()
+    {
+        m_IsGround = Physics.Raycast(m_Rigid.position + new Vector3(0, 0.2f, 0), Vector3.down, GroundCheckMargin + 0.2f, (1 << (int)LAYER.OBJECT | 1 << (int)LAYER.GROUND));
+    }
+
+}

@@ -6,9 +6,12 @@ public class BioPhysics : MonoBehaviour
     const float Gravity = 12.0f;
     const float DecelerationValue = 0.5f;
     public const float GroundCheckMargin = 0.02f;
+    [SerializeField] float m_MaxSlope;
     Rigidbody m_Rigid;
     Vector3 m_CurVelocity;
     bool m_IsGround;
+    Vector3 m_GroundNormal = Vector3.up;
+    Transform m_Ground;
 
     public Vector3 Velocity { get { return m_CurVelocity; }  set { m_CurVelocity = value; } }
     public bool IsGround { get { return m_IsGround; } }
@@ -41,11 +44,49 @@ public class BioPhysics : MonoBehaviour
         GroundCheck();
         VelocityFixedUpdate();
     }
+    Vector3 m_GizmoForward;
     void Move()
     {
-        if (m_CurVelocity != Vector3.zero)
+        Vector2 velocityXZ = new Vector2(m_CurVelocity.x, m_CurVelocity.z);
+        Vector3 movePos = Vector3.zero;
+        if(velocityXZ != Vector2.zero)
         {
-            m_Rigid.MovePosition(m_Rigid.position + m_CurVelocity * Time.fixedDeltaTime);
+            if(m_IsGround == false)
+            {
+                Debug.Log("공중이동");
+                Vector3 right = Vector3.Cross(m_GroundNormal, new Vector3(velocityXZ.x, 0, velocityXZ.y));
+                Vector3 forward = Vector3.Cross(right, m_GroundNormal);
+                m_GizmoForward = forward;
+                movePos = forward * Time.fixedDeltaTime;
+            }
+            else
+            {
+                float normalY = Mathf.Clamp01(m_GroundNormal.y);
+                float slopeAngle = 90 - Mathf.Asin(normalY) * Mathf.Rad2Deg;
+                if (slopeAngle < m_MaxSlope)
+                {
+                    Vector3 right = Vector3.Cross(m_GroundNormal, new Vector3(velocityXZ.x, 0, velocityXZ.y));
+                    Vector3 forward = Vector3.Cross(right, m_GroundNormal);
+                    m_GizmoForward = forward;
+                    movePos = forward * Time.fixedDeltaTime;
+                    Debug.Log("이동가능 각도");
+                }
+                else
+                {
+                    Debug.Log("이동불가능 각도");
+                }
+            }
+          
+          
+        }
+        float velocityY = m_CurVelocity.y;
+        if (velocityY != 0)
+        {
+            movePos.y = velocityY * Time.fixedDeltaTime;
+        }
+        if(movePos!= Vector3.zero)
+        {
+            m_Rigid.MovePosition(m_Rigid.position + movePos);
         }
     }
     void VelocityFixedUpdate()
@@ -80,17 +121,14 @@ public class BioPhysics : MonoBehaviour
 
         if (isGround) 
         {
-            Debug.Log(hit.transform.name + " " + hit.normal);
+            m_Ground = hit.transform;
+            m_GroundNormal = hit.normal;
         }
         else
         {
-            Debug.Log("충돌x");
+            m_Ground = null;
+            m_GroundNormal = Vector3.up;
         }
-        //m_IsGround = Physics.Raycast(m_Rigid.position + new Vector3(0, 0.2f, 0), Vector3.down, out RaycastHit hit, GroundCheckMargin + 0.2f, (1 << (int)LAYER.OBJECT | 1 << (int)LAYER.GROUND));
-        //if(m_IsGround)
-        //{
-        //    hit = 
-        //}
         m_IsGround = isGround;
     }
     
@@ -103,11 +141,17 @@ public class BioPhysics : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        //if(Physics.BoxCast(transform.position, Vector3.one, Vector3.forward, out RaycastHit hit,Quaternion.identity,5, (1 << (int)LAYER.OBJECT | 1 << (int)LAYER.GROUND)))
-        //{
-        //    Debug.Log("충돌"+ hit.transform.name+" " +hit.point);
-        //    Gizmos.DrawWireCube(hit.point, Vector3.one * 2);
-        //}
+        if (Application.isPlaying)
+        {
+            Gizmos.DrawLine(transform.position + new Vector3(0, 0.2f, 0), transform.position + new Vector3(0, 0.2f, 0) + m_GizmoForward * 1);
+            Vector3 rayStartPos = m_Rigid.position + new Vector3(0, 0.5f, 0);
+            Vector3 halfExSize = new Vector3(0.2f, 0.05f, 0.2f);
+            bool isGround = Physics.BoxCast(rayStartPos, halfExSize, Vector3.down, out RaycastHit hit, Quaternion.Euler(0, transform.rotation.y, 0), 0.5f, (1 << (int)LAYER.OBJECT | 1 << (int)LAYER.GROUND));
+            if (isGround)
+            {
+                Gizmos.DrawCube(hit.point, new Vector3(0.1f, 0.05f, 0.1f) * 2);
+            }
+        }
     }
 
 }

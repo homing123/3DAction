@@ -8,11 +8,11 @@ public class PlayerCam : MonoBehaviour
     PlayerMove m_Player;
     float m_CurRotY;
 
-    [SerializeField] float m_MouseRotSpeed;
+    [SerializeField] float m_MouseRotSpeed = 200;
 
-    [SerializeField] float m_Dis;
-    [SerializeField] float m_Height;
-    [SerializeField] float m_PlayerFocusHeight;
+    [SerializeField] float m_Dis = 5;
+    [SerializeField] float m_Height = 1;
+    [SerializeField] float m_PlayerFocusHeight = 1.7f;
 
     public float CamRotY { get { return m_CurRotY; } }
 

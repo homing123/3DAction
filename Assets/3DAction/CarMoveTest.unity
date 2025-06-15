@@ -1603,6 +1603,10 @@ PrefabInstance:
       value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 140574248660426058, guid: 5ca4689fab9f8fa40a71422fc509f450, type: 3}
+      propertyPath: m_RotAngle
+      value: 3.14
+      objectReference: {fileID: 0}
+    - target: {fileID: 140574248660426058, guid: 5ca4689fab9f8fa40a71422fc509f450, type: 3}
       propertyPath: m_MaxSpeedBack
       value: 20
       objectReference: {fileID: 0}
@@ -1621,6 +1625,14 @@ PrefabInstance:
     - target: {fileID: 1175929318671228555, guid: 5ca4689fab9f8fa40a71422fc509f450, type: 3}
       propertyPath: m_AngularDamping
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1871768653430971735, guid: 5ca4689fab9f8fa40a71422fc509f450, type: 3}
+      propertyPath: m_Size
+      value: 4.451458
+      objectReference: {fileID: 0}
+    - target: {fileID: 1871768653430971735, guid: 5ca4689fab9f8fa40a71422fc509f450, type: 3}
+      propertyPath: m_LocalReferencePoint.x
+      value: -0.2935801
       objectReference: {fileID: 0}
     - target: {fileID: 2056837858357457281, guid: 5ca4689fab9f8fa40a71422fc509f450, type: 3}
       propertyPath: m_StaticEditorFlags

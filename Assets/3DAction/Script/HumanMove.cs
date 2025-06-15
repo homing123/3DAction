@@ -225,7 +225,7 @@ public class HumanMove : MonoBehaviour
         if (m_MoveType == MOVE_TYPE.Walk)
         {
             m_CurVelocityY = m_JumpSpeed;
-            m_CurJumpDelay = PlayerMove.JumpDelay;
+            m_CurJumpDelay = JumpDelay;
             m_MoveType = MOVE_TYPE.JUMP;
             m_HumanAnim.SetAnimTrigger(ANIM_TRIGGER.JUMP);
             return true;

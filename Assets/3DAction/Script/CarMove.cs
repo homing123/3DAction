@@ -1,22 +1,22 @@
 using Unity.VisualScripting;
 using UnityEngine;
 
+public enum CarAccType
+{
+    None,
+    Forward,
+    Back,
+    Break
+}
+public enum CarRotType
+{
+    Straight,
+    Right,
+    Left
+}
 public class CarMove : MonoBehaviour
 {
     const float SelfDeceleration = 0.9f;
-
-    public enum CarAccType
-    {
-        None,
-        Forward,
-        Back
-    }
-    public enum CarRotType
-    {
-        Straight,
-        Right,
-        Left
-    }
 
     Rigidbody m_Rigid;
     CarRotType m_RotType = CarRotType.Straight;

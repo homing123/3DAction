@@ -1,11 +1,11 @@
 using UnityEngine;
 
-public enum LAYER
+public enum Layer
 {
-    GROUND = 6,
-    PLAYER = 7,
-    MONSTER = 8,
-    OBJECT = 9
+    Ground = 6,
+    Player = 7,
+    Monster = 8,
+    Object = 9
 }
 
 public class Define

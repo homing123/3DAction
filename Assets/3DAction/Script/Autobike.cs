@@ -13,12 +13,15 @@ public class Autobike : MonoBehaviour
     [SerializeField] Tire m_BackTire;
     [SerializeField] Transform m_Body;
 
-    [SerializeField] float m_Acc;
     [SerializeField] float m_Break;
     [SerializeField][Range(1,89)] float m_MaxRot;
     [SerializeField] float m_HandleSensitivity;
 
     [SerializeField] float m_MaxSpeedForward;
+    [SerializeField] float m_MaxSpeedBack;
+    [SerializeField] float m_MaxAcc;
+    [SerializeField] [Range(0,1)]float m_SelfDeceleration;
+    [SerializeField] float m_RotZAnimMaxAngle;
 
     Vector3 m_FrontOriginOffset;
     Vector3 m_BackOriginOffset;
@@ -91,6 +94,7 @@ public class Autobike : MonoBehaviour
                 {
                     m_CurRot = -m_MaxRot;
                 }
+
                 break;
             case CarRotType.Right:
                 m_CurRot += m_HandleSensitivity * Time.fixedDeltaTime;
@@ -111,25 +115,53 @@ public class Autobike : MonoBehaviour
                 }
                 break;
         }
+        //회전감속
+        m_Speed *= 1 - Mathf.Pow(Mathf.Clamp01(Mathf.Sin(Mathf.Abs(m_CurRot * Mathf.Deg2Rad))), 3);
+
+
         m_FrontTire.SetRot(m_CurRot);
         switch(m_AccType)
         {
             case CarAccType.None:
+                {
+                    float breakForce = m_Break * 0.3f * Time.fixedDeltaTime;
+                    if (Mathf.Abs(m_Speed) < breakForce)
+                    {
+                        m_Speed = 0;
+                    }
+                    else
+                    {
+                        m_Speed -= breakForce * Mathf.Sign(m_Speed);
+                    }
+                }
                 break;
             case CarAccType.Forward:
-                m_Speed += m_Acc * Time.fixedDeltaTime;
+                {
+                    float acc = Mathf.Clamp01((m_MaxSpeedForward - m_Speed) / m_MaxSpeedForward);
+                    acc *= m_MaxAcc;
+                    m_Speed += acc * Time.fixedDeltaTime;
+                    m_Speed = Mathf.Clamp(m_Speed, -m_MaxSpeedBack, m_MaxSpeedForward);
+                }
                 break;
             case CarAccType.Back:
+                {
+                    float acc = Mathf.Clamp01((m_Speed + m_MaxSpeedBack) / m_MaxSpeedBack);
+                    acc *= -m_MaxAcc;
+                    m_Speed += acc * Time.fixedDeltaTime;
+                    m_Speed = Mathf.Clamp(m_Speed, -m_MaxSpeedBack, m_MaxSpeedForward);
+                }
                 break;
             case CarAccType.Break:
-                float breakForce = m_Break * Time.fixedDeltaTime;
-                if (Mathf.Abs(m_Speed) < breakForce)
                 {
-                    m_Speed = 0;
-                }
-                else
-                {
-                    m_Speed -= breakForce * Mathf.Sign(m_Speed);
+                    float breakForce = m_Break * Time.fixedDeltaTime;
+                    if (Mathf.Abs(m_Speed) < breakForce)
+                    {
+                        m_Speed = 0;
+                    }
+                    else
+                    {
+                        m_Speed -= breakForce * Mathf.Sign(m_Speed);
+                    }
                 }
                 break;
         }
@@ -160,8 +192,12 @@ public class Autobike : MonoBehaviour
         m_Body.transform.position = mainPos + bodyOffset;
         m_FrontTire.transform.position = mainPos + frontOffset;
         m_BackTire.transform.position = mainPos + backOffset;
-        
-       // Debug.Log($"front {frontTirePos} back {backTirePos} main{mainPos}");
+        float curRotZAnimAngle = -(m_CurRot / m_MaxRot) * Mathf.Clamp01((m_Speed - m_MaxSpeedBack) / (m_MaxSpeedForward - m_MaxSpeedBack)) * m_RotZAnimMaxAngle;
+        transform.rotation = Quaternion.AngleAxis(curRotZAnimAngle, forward) * transform.rotation;
+
+
+
+        // Debug.Log($"front {frontTirePos} back {backTirePos} main{mainPos}");
     }
     void Acc(CarAccType accType)
     {

@@ -50,6 +50,7 @@ public class Tire : MonoBehaviour
         if (m_isGround)
         {
             Vector3 rotatedForward = Quaternion.AngleAxis(m_Rot, m_GroundNormal) * forward;
+
             Vector3 rotatedTireRightOrLeft = Vector3.zero;
             if(m_Rot > 0)
             {
@@ -61,10 +62,11 @@ public class Tire : MonoBehaviour
                 //right
                 rotatedTireRightOrLeft = Vector3.Cross(m_GroundNormal, rotatedForward);
             }
+            Debug.Log($"forward : {forward} rotatedForward {rotatedForward} rotatedrol{rotatedTireRightOrLeft}");
+
             float dotRotatedForward = Vector3.Dot(forward * dis, rotatedForward);
             float dotRotatedROL = Vector3.Dot(forward * dis, rotatedTireRightOrLeft);
             moveVector = rotatedForward * dotRotatedForward + rotatedTireRightOrLeft * dotRotatedROL * (1 - m_FrictionCurve.Evaluate(TireFrictionCurveMaxValueRCP * speed));
-           // Debug.Log($"{bodyRight} {dis} {forward} {rotatedTireRightOrLeft} {dotRotatedForward} {dotRotatedROL} {moveVector}");
         }
 
         return transform.position + moveVector;
@@ -73,6 +75,10 @@ public class Tire : MonoBehaviour
     {
         m_Rot = rot;
         transform.localRotation = Quaternion.AngleAxis(m_Rot, Vector3.up) * m_OriginQuat;
+    }
+    public float GetFriction(float speed)
+    {
+        return m_FrictionCurve.Evaluate(TireFrictionCurveMaxValueRCP * speed);
     }
     //Vector3 GetOffset()
     //{

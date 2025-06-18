@@ -4,8 +4,10 @@ using System.Collections.Generic;
 public class Tire : MonoBehaviour
 {
     const float TireFrictionCurveMaxValueRCP = 1 / 200.0f;
+    Collider m_Col;
     Transform m_Parent;
     Vector3 m_OriginLocalPos;
+    Collider m_GroundCol;
     public Vector3 m_GroundNormal { get; private set; }
     public bool m_isGround { get; private set; }
 
@@ -24,6 +26,7 @@ public class Tire : MonoBehaviour
         m_OriginLocalPos = transform.localPosition;
         m_Parent = transform.parent;
         m_OriginQuat = transform.localRotation;
+        m_Col = GetComponentInChildren<Collider>();
     }
 
     private void FixedUpdate()
@@ -36,13 +39,14 @@ public class Tire : MonoBehaviour
         {
             m_GroundNormal = hit.normal;
             m_isGround = true;
+            m_GroundCol = hit.collider;
         }
         else
         {
             m_isGround = false;
         }
     }
-    public Vector3 Move(Vector3 bodyRight, float speed)
+    public void Move(Vector3 bodyRight, float speed)
     {
         float dis = speed * Time.fixedDeltaTime;
         Vector3 forward = Vector3.Cross(bodyRight, m_GroundNormal).normalized;
@@ -62,14 +66,20 @@ public class Tire : MonoBehaviour
                 //right
                 rotatedTireRightOrLeft = Vector3.Cross(m_GroundNormal, rotatedForward);
             }
-            Debug.Log($"forward : {forward} rotatedForward {rotatedForward} rotatedrol{rotatedTireRightOrLeft}");
 
             float dotRotatedForward = Vector3.Dot(forward * dis, rotatedForward);
             float dotRotatedROL = Vector3.Dot(forward * dis, rotatedTireRightOrLeft);
             moveVector = rotatedForward * dotRotatedForward + rotatedTireRightOrLeft * dotRotatedROL * (1 - m_FrictionCurve.Evaluate(TireFrictionCurveMaxValueRCP * speed));
+            transform.position += moveVector;
+
+            //땅과 충돌시 충돌한 만큼 바깥으로 이동
+            if(Physics.ComputePenetration(m_Col, transform.position, transform.rotation, m_GroundCol, m_GroundCol.transform.position, m_GroundCol.transform.rotation, out Vector3 direction, out float distance))
+            {
+                transform.position += direction * distance;
+            }
         }
 
-        return transform.position + moveVector;
+        
     }
     public void SetRot(float rot)
     {

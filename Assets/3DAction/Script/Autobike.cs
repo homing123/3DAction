@@ -61,7 +61,6 @@ public class Autobike : MonoBehaviour
             Acc(CarAccType.Break);
         }
 
-        SetTransform();
     }
     private void FixedUpdate()
     {
@@ -69,7 +68,7 @@ public class Autobike : MonoBehaviour
         m_BackTire.CheckState();
         VelocityFixedUpdate();
         MoveTire();
-
+        SetTransform();
     }
 
     //타이어이동
@@ -78,10 +77,8 @@ public class Autobike : MonoBehaviour
 
     void MoveTire()
     {
-        Vector3 frontTirePos = m_FrontTire.Move(transform.right, m_Speed);
-        Vector3 backTirePos = m_BackTire.Move(transform.right, m_Speed);
-        m_FrontTire.transform.position = frontTirePos;
-        m_BackTire.transform.position = backTirePos;
+        m_FrontTire.Move(transform.right, m_Speed);
+        m_BackTire.Move(transform.right, m_Speed);
         //Debug.Log(frontTirePos + " " + backTirePos);
     }
     void VelocityFixedUpdate()
@@ -166,7 +163,6 @@ public class Autobike : MonoBehaviour
                 break;
         }
     }
-
     void SetTransform()
     {
         Vector3 frontTirePos = m_FrontTire.transform.position;
@@ -174,14 +170,18 @@ public class Autobike : MonoBehaviour
         Vector3 forward = (frontTirePos - backTirePos).normalized;
         Vector3 right = Vector3.Cross(Vector3.up, forward).normalized;
         Vector3 up = Vector3.Cross(forward, right);
-        //Debug.Log($"forward {forward}, right {right}, up {up}");
+       // Debug.Log($"forward {forward}, right {right}, up {up} frontTirePos{frontTirePos}, backtirepos { backTirePos}");
         Matrix4x4 rotMat = new Matrix4x4();
         rotMat.SetColumn(0, new Vector4(right.x, right.y, right.z, 0));
         rotMat.SetColumn(1, new Vector4(up.x, up.y, up.z, 0));
         rotMat.SetColumn(2, new Vector4(forward.x, forward.y, forward.z, 0));
         rotMat.SetColumn(3, new Vector4(0, 0, 0, 1));
+        float curRotZAnimAngle = -(m_CurRot / m_MaxRot) * Mathf.Clamp01((m_Speed - m_MaxSpeedBack) / (m_MaxSpeedForward - m_MaxSpeedBack)) * m_RotZAnimMaxAngle;
+        Matrix4x4 rotZAnimMat = Matrix4x4.Rotate(Quaternion.AngleAxis(curRotZAnimAngle, forward));
+        rotMat = rotZAnimMat * rotMat;
 
         transform.rotation = rotMat.rotation;
+
         Vector3 mainOfFront = frontTirePos - (Vector3)(rotMat * m_FrontOriginOffset);
         Vector3 mainOfBack = backTirePos - (Vector3)(rotMat * m_BackOriginOffset);
         Vector3 mainPos = (mainOfFront + mainOfBack) * 0.5f;
@@ -192,10 +192,7 @@ public class Autobike : MonoBehaviour
         m_Body.transform.position = mainPos + bodyOffset;
         m_FrontTire.transform.position = mainPos + frontOffset;
         m_BackTire.transform.position = mainPos + backOffset;
-        float curRotZAnimAngle = -(m_CurRot / m_MaxRot) * Mathf.Clamp01((m_Speed - m_MaxSpeedBack) / (m_MaxSpeedForward - m_MaxSpeedBack)) * m_RotZAnimMaxAngle;
-        transform.rotation = Quaternion.AngleAxis(curRotZAnimAngle, forward) * transform.rotation;
-
-
+       
 
         // Debug.Log($"front {frontTirePos} back {backTirePos} main{mainPos}");
     }

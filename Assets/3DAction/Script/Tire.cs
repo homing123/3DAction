@@ -3,11 +3,11 @@ using System.Collections.Generic;
 
 public class Tire : MonoBehaviour
 {
+    const float SphereRayCastRadius = 0.32f;
+    const float SphereRaycastDis = 0.08f;
     const float TireFrictionCurveMaxValueRCP = 1 / 200.0f;
-    Collider m_Col;
-    Transform m_Parent;
-    Vector3 m_OriginLocalPos;
-    Collider m_GroundCol;
+
+    Rigidbody m_Rigid;
     public Vector3 m_GroundNormal { get; private set; }
     public bool m_isGround { get; private set; }
 
@@ -19,33 +19,85 @@ public class Tire : MonoBehaviour
     [SerializeField] float m_SpringDamping;
     float m_SpringVelocity;
     [SerializeField] AnimationCurve m_FrictionCurve;
-
+    [SerializeField] bool m_hasGizmo;
+    [SerializeField] bool m_hasLog;
     Quaternion m_OriginQuat;
     private void Awake()
     {
-        m_OriginLocalPos = transform.localPosition;
-        m_Parent = transform.parent;
-        m_OriginQuat = transform.localRotation;
-        m_Col = GetComponentInChildren<Collider>();
+        m_Rigid = GetComponent<Rigidbody>();
+
     }
 
     private void FixedUpdate()
     {
-
+        m_Rigid.linearVelocity = Vector3.zero;
     }
-    public void CheckState()
+    private void OnDrawGizmos()
     {
-        if(Physics.Raycast(transform.position, -Vector3.up, out RaycastHit hit, 0.37f, 1 << (int)Layer.Ground))
+        if(m_hasGizmo==false)
         {
-            m_GroundNormal = hit.normal;
-            m_isGround = true;
-            m_GroundCol = hit.collider;
+            return;
+        }
+        Vector3 rayStartPos = transform.position + transform.up * 0.5f;
+        float rayDis = SphereRaycastDis + 0.5f;
+        RaycastHit[] hits = Physics.SphereCastAll(rayStartPos, SphereRayCastRadius, -transform.up, rayDis, 1 << (int)Layer.Ground);
+        if (hits.Length == 0)
+        {
+            
         }
         else
         {
+            RaycastHit topHit;
+            Vector3 tire2Hitpoint = hits[0].point - transform.position;
+            float nearSqauredDis = tire2Hitpoint.sqrMagnitude;
+            int nearIdx = 0;
+            for (int i = 1; i < hits.Length; i++)
+            {
+                tire2Hitpoint = hits[1].point - transform.position;
+                float disSquare = tire2Hitpoint.sqrMagnitude;
+                if (nearSqauredDis < disSquare)
+                {
+                    nearIdx = i;
+                    nearSqauredDis = disSquare;
+                }
+            }
+            topHit = hits[nearIdx];
+            Gizmos.DrawSphere(topHit.point, SphereRayCastRadius);
+        }
+        Gizmos.DrawLine(transform.position, transform.position - transform.up);
+    }
+    public void CheckState()
+    {
+        //Debug.Log(-transform.up);
+        Vector3 rayStartPos = transform.position + transform.up * 0.5f;
+        float rayDis = SphereRaycastDis + 0.5f;
+        RaycastHit[] hits = Physics.SphereCastAll(rayStartPos, SphereRayCastRadius, -transform.up, rayDis, 1 << (int)Layer.Ground);
+        if (hits.Length == 0)
+        {
             m_isGround = false;
         }
+        else
+        {
+            RaycastHit topHit;
+            Vector3 tire2Hitpoint = hits[0].point - transform.position;
+            float nearSqauredDis = tire2Hitpoint.sqrMagnitude;
+            int nearIdx = 0;
+            for (int i=1;i<hits.Length;i++)
+            {
+                tire2Hitpoint = hits[1].point - transform.position;
+                float disSquare = tire2Hitpoint.sqrMagnitude;
+                if(nearSqauredDis < disSquare)
+                {
+                    nearIdx = i;
+                    nearSqauredDis = disSquare;
+                }
+            }
+            topHit = hits[nearIdx];
+            m_GroundNormal = topHit.normal;
+            m_isGround = true;
+        }
     }
+
     public void Move(Vector3 bodyRight, float speed)
     {
         float dis = speed * Time.fixedDeltaTime;
@@ -71,12 +123,12 @@ public class Tire : MonoBehaviour
             float dotRotatedROL = Vector3.Dot(forward * dis, rotatedTireRightOrLeft);
             moveVector = rotatedForward * dotRotatedForward + rotatedTireRightOrLeft * dotRotatedROL * (1 - m_FrictionCurve.Evaluate(TireFrictionCurveMaxValueRCP * speed));
             transform.position += moveVector;
-
+            transform.position += new Vector3(0, -0.01f, 0);
             //땅과 충돌시 충돌한 만큼 바깥으로 이동
-            if(Physics.ComputePenetration(m_Col, transform.position, transform.rotation, m_GroundCol, m_GroundCol.transform.position, m_GroundCol.transform.rotation, out Vector3 direction, out float distance))
-            {
-                transform.position += direction * distance;
-            }
+            //if(Physics.ComputePenetration(m_Col, transform.position, transform.rotation, m_GroundCol, m_GroundCol.transform.position, m_GroundCol.transform.rotation, out Vector3 direction, out float distance))
+            //{
+            //    transform.position += direction * distance;
+            //}
         }
 
         

@@ -28,6 +28,14 @@ public class Autobike : MonoBehaviour
     Vector3 m_BodyOffset;
 
 
+    private void OnEnable()
+    {
+        LateFixedUpdate.OnLateFixedUpdate += SetTransform;
+    }
+    private void OnDisable()
+    {
+        LateFixedUpdate.OnLateFixedUpdate -= SetTransform;
+    }
     private void Start()
     {
         m_FrontOriginOffset = m_FrontTire.transform.localPosition;
@@ -67,8 +75,7 @@ public class Autobike : MonoBehaviour
         m_FrontTire.CheckState();
         m_BackTire.CheckState();
         VelocityFixedUpdate();
-        MoveTire();
-        SetTransform();
+        MoveTire();     
     }
 
     //타이어이동

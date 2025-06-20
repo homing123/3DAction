@@ -52,14 +52,26 @@ public class Tire : MonoBehaviour
         {
             Gizmos.color = Color.white;
             Gizmos.DrawSphere(hit.point, SphereRayCastRadius);
+            BoxCollider box = hit.collider as BoxCollider;
+            Vector3 normal = Vector3.zero;
+            if (box != null)
+            {
+                normal = Util.NotInterpolationNormalBox(hit.point, box);
+            }
+            else
+            {
+                normal = hit.normal;
+            }
+            Gizmos.color = Color.orange;
+            Gizmos.DrawLine(hit.point, hit.point + normal);
         }
 
-        Gizmos.color = Color.black;
-        Gizmos.DrawLine(transform.position, transform.position - transform.up); 
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawLine(transform.position, transform.position + m_GroundNormal);
-        Gizmos.color = Color.blue;
-        Gizmos.DrawLine(transform.position, transform.position - m_LastMoveDir);
+        //Gizmos.color = Color.black;
+        //Gizmos.DrawLine(transform.position, transform.position - transform.up); 
+        //Gizmos.color = Color.yellow;
+        //Gizmos.DrawLine(transform.position, transform.position + m_GroundNormal);
+        //Gizmos.color = Color.blue;
+        //Gizmos.DrawLine(transform.position, transform.position - m_LastMoveDir);
     }
 
     bool GetGroundHit(out RaycastHit hit)
@@ -112,16 +124,19 @@ public class Tire : MonoBehaviour
             {
                 float cos = Vector3.Dot(normal, m_LastMoveDir);
                 float angle = Mathf.Acos(cos) * Mathf.Rad2Deg;
-                if (m_hasLog)
-                {
-                    Debug.Log(angle);
-                }
                 if (angle > 85)
                 {
                     m_GroundNormal = normal;
                     m_isGround = true;
                     m_GroundCol = hit.collider;
                     return true;
+                }
+                else
+                {
+                    if (m_hasLog)
+                    {
+                        Debug.Log(hit.transform.name + " " + normal + " " + angle);
+                    }
                 }
             }
             else

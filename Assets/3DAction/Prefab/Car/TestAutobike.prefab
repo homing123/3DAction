@@ -279,6 +279,8 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  m_hasGizmo: 0
+  m_hasLog: 0
 --- !u!1 &2881663553155439822
 GameObject:
   m_ObjectHideFlags: 0
@@ -288,7 +290,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6504580884995473457}
-  - component: {fileID: 7784987855102822166}
   - component: {fileID: 6473203671719842162}
   - component: {fileID: 548309423385124388}
   m_Layer: 10
@@ -314,45 +315,6 @@ Transform:
   - {fileID: 3578274991145083622}
   m_Father: {fileID: 584520560318540776}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!146 &7784987855102822166
-WheelCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2881663553155439822}
-  serializedVersion: 2
-  m_Center: {x: 0, y: 0, z: 0}
-  m_Radius: 0.35
-  m_SuspensionSpring:
-    spring: 0
-    damper: 0
-    targetPosition: 0
-  m_SuspensionDistance: 0
-  m_ForceAppPointDistance: 0
-  m_Mass: 20
-  m_WheelDampingRate: 0.0001
-  m_ForwardFriction:
-    m_ExtremumSlip: 0.001
-    m_ExtremumValue: 0.001
-    m_AsymptoteSlip: 0.001
-    m_AsymptoteValue: 0.001
-    m_Stiffness: 0
-  m_SidewaysFriction:
-    m_ExtremumSlip: 0.001
-    m_ExtremumValue: 0.001
-    m_AsymptoteSlip: 0.001
-    m_AsymptoteValue: 0.001
-    m_Stiffness: 0
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 64
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 2048
-  m_LayerOverridePriority: 0
-  m_Enabled: 1
-  m_ProvidesContacts: 0
 --- !u!114 &6473203671719842162
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -409,6 +371,8 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  m_hasGizmo: 0
+  m_hasLog: 0
 --- !u!54 &548309423385124388
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -629,6 +593,8 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  m_hasGizmo: 0
+  m_hasLog: 0
 --- !u!1 &7330599771411439027
 GameObject:
   m_ObjectHideFlags: 0
@@ -638,7 +604,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6062067216717779570}
-  - component: {fileID: 5237166609614839723}
   - component: {fileID: 8143538431099189214}
   - component: {fileID: 5071743768381412497}
   m_Layer: 10
@@ -664,45 +629,6 @@ Transform:
   - {fileID: 2341624184867938677}
   m_Father: {fileID: 584520560318540776}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!146 &5237166609614839723
-WheelCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7330599771411439027}
-  serializedVersion: 2
-  m_Center: {x: 0, y: 0, z: 0}
-  m_Radius: 0.35
-  m_SuspensionSpring:
-    spring: 0
-    damper: 0
-    targetPosition: 0
-  m_SuspensionDistance: 0
-  m_ForceAppPointDistance: 0
-  m_Mass: 20
-  m_WheelDampingRate: 0.0001
-  m_ForwardFriction:
-    m_ExtremumSlip: 0.001
-    m_ExtremumValue: 0.001
-    m_AsymptoteSlip: 0.001
-    m_AsymptoteValue: 0.001
-    m_Stiffness: 0
-  m_SidewaysFriction:
-    m_ExtremumSlip: 0.001
-    m_ExtremumValue: 0.001
-    m_AsymptoteSlip: 0.001
-    m_AsymptoteValue: 0.001
-    m_Stiffness: 0
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 64
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 2048
-  m_LayerOverridePriority: 0
-  m_Enabled: 1
-  m_ProvidesContacts: 0
 --- !u!114 &8143538431099189214
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -759,6 +685,8 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+  m_hasGizmo: 0
+  m_hasLog: 0
 --- !u!54 &5071743768381412497
 Rigidbody:
   m_ObjectHideFlags: 0

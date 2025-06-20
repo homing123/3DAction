@@ -1,12 +1,21 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+
+//현재 진행방향과 노말의 방향이 90도 보다 작을경우 오른쪽 위로 진행중에 수평땅이 오는경우 
+//한쪽바퀴만 공중에 떠있는 경우
+//양쪽바퀴다 공중에 떠있는 경우
+//롤러코스터 회전하듯이 360도 빠르게달려서 회전
+//자체회전
+//드드드드드드득 왓따갔다 버그걸릴때
 public class Tire : MonoBehaviour
 {
     const float SphereRayCastRadius = 0.32f;
     const float SphereRaycastDis = 0.08f;
     const float TireFrictionCurveMaxValueRCP = 1 / 200.0f;
 
+    Collider m_Col;
+    Collider m_GroundCol;
     Rigidbody m_Rigid;
     public Vector3 m_GroundNormal { get; private set; }
     public bool m_isGround { get; private set; }
@@ -25,12 +34,12 @@ public class Tire : MonoBehaviour
     private void Awake()
     {
         m_Rigid = GetComponent<Rigidbody>();
-
+        m_Col = GetComponent<Collider>();
     }
 
     private void FixedUpdate()
     {
-        m_Rigid.linearVelocity = Vector3.zero;
+        //m_Rigid.linearVelocity = Vector3.zero;
     }
     private void OnDrawGizmos()
     {
@@ -51,11 +60,15 @@ public class Tire : MonoBehaviour
             Vector3 tire2Hitpoint = hits[0].point - transform.position;
             float nearSqauredDis = tire2Hitpoint.sqrMagnitude;
             int nearIdx = 0;
+            for(int i=0;i<hits.Length; i++)
+            {
+                Gizmos.DrawCube(hits[i].point, new Vector3(0.2f, 0.2f, 0.2f));
+            }
             for (int i = 1; i < hits.Length; i++)
             {
-                tire2Hitpoint = hits[1].point - transform.position;
+                tire2Hitpoint = hits[i].point - transform.position;
                 float disSquare = tire2Hitpoint.sqrMagnitude;
-                if (nearSqauredDis < disSquare)
+                if (nearSqauredDis > disSquare)
                 {
                     nearIdx = i;
                     nearSqauredDis = disSquare;
@@ -66,7 +79,7 @@ public class Tire : MonoBehaviour
         }
         Gizmos.DrawLine(transform.position, transform.position - transform.up);
     }
-    public void CheckState()
+    public bool CheckGround()
     {
         //Debug.Log(-transform.up);
         Vector3 rayStartPos = transform.position + transform.up * 0.5f;
@@ -75,6 +88,7 @@ public class Tire : MonoBehaviour
         if (hits.Length == 0)
         {
             m_isGround = false;
+            return false;
         }
         else
         {
@@ -82,11 +96,12 @@ public class Tire : MonoBehaviour
             Vector3 tire2Hitpoint = hits[0].point - transform.position;
             float nearSqauredDis = tire2Hitpoint.sqrMagnitude;
             int nearIdx = 0;
+            
             for (int i=1;i<hits.Length;i++)
             {
-                tire2Hitpoint = hits[1].point - transform.position;
+                tire2Hitpoint = hits[i].point - transform.position;
                 float disSquare = tire2Hitpoint.sqrMagnitude;
-                if(nearSqauredDis < disSquare)
+                if(nearSqauredDis > disSquare)
                 {
                     nearIdx = i;
                     nearSqauredDis = disSquare;
@@ -95,6 +110,8 @@ public class Tire : MonoBehaviour
             topHit = hits[nearIdx];
             m_GroundNormal = topHit.normal;
             m_isGround = true;
+            m_GroundCol = topHit.collider;
+            return true;
         }
     }
 
@@ -122,16 +139,22 @@ public class Tire : MonoBehaviour
             float dotRotatedForward = Vector3.Dot(forward * dis, rotatedForward);
             float dotRotatedROL = Vector3.Dot(forward * dis, rotatedTireRightOrLeft);
             moveVector = rotatedForward * dotRotatedForward + rotatedTireRightOrLeft * dotRotatedROL * (1 - m_FrictionCurve.Evaluate(TireFrictionCurveMaxValueRCP * speed));
-            transform.position += moveVector;
-            transform.position += new Vector3(0, -0.01f, 0);
+            //transform.position += new Vector3(0, -0.01f, 0);
             //땅과 충돌시 충돌한 만큼 바깥으로 이동
-            //if(Physics.ComputePenetration(m_Col, transform.position, transform.rotation, m_GroundCol, m_GroundCol.transform.position, m_GroundCol.transform.rotation, out Vector3 direction, out float distance))
-            //{
-            //    transform.position += direction * distance;
-            //}
+            transform.position += moveVector;
+            if (Physics.ComputePenetration(m_Col, transform.position, transform.rotation, m_GroundCol, m_GroundCol.transform.position, m_GroundCol.transform.rotation, out Vector3 direction, out float distance))
+            {
+                transform.position += direction * (distance - 0.01f);
+            }
         }
-
+        else
+        {
+            moveVector = forward * dis;
+            transform.position += moveVector;
+        }
         
+
+
     }
     public void SetRot(float rot)
     {

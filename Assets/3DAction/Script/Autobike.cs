@@ -7,7 +7,9 @@ public class Autobike : MonoBehaviour
 
     float m_Speed;
     Vector3 m_Velocity;
-    float m_CurRot;
+    float m_CurRotY;
+    float m_CurRotXSpeed;
+    bool m_IsGround;
 
     [SerializeField] Tire m_FrontTire;
     [SerializeField] Tire m_BackTire;
@@ -22,6 +24,8 @@ public class Autobike : MonoBehaviour
     [SerializeField] float m_MaxAcc;
     [SerializeField] [Range(0,1)]float m_SelfDeceleration;
     [SerializeField] float m_RotZAnimMaxAngle;
+    [SerializeField] float m_RotXAcc;
+    [SerializeField] float m_AirDamping;
 
     Vector3 m_FrontOriginOffset;
     Vector3 m_BackOriginOffset;
@@ -72,8 +76,7 @@ public class Autobike : MonoBehaviour
     }
     private void FixedUpdate()
     {
-        m_FrontTire.CheckState();
-        m_BackTire.CheckState();
+        GroundCheckTire();
         VelocityFixedUpdate();
         MoveTire();     
     }
@@ -81,49 +84,87 @@ public class Autobike : MonoBehaviour
     //타이어이동
     //물리이동
     //위치에 맞게 바디세팅
-
-    void MoveTire()
+    void GroundCheckTire()
     {
-        m_FrontTire.Move(transform.right, m_Speed);
-        m_BackTire.Move(transform.right, m_Speed);
-        //Debug.Log(frontTirePos + " " + backTirePos);
+        bool frontIsGround = m_FrontTire.CheckGround();
+        bool backIsGround = m_BackTire.CheckGround();
+        m_IsGround = frontIsGround & backIsGround;
+
+        if((frontIsGround | backIsGround) == true)
+        {
+            //땅
+            m_CurRotXSpeed = 0;
+        }
+        else if((frontIsGround & backIsGround) == true)
+        {
+            //공중
+        }
+        else
+        {
+            //한쪽바퀴만
+
+        }
+        //한쪽 바퀴만 떠있는 경우 회전하되 반대쪽 땅에붙은 바퀴기준으로 회전함
+        //양쪽바퀴 다 떠있는 경우 공중에서 중력받고 회전속도 유지됨
+        //양쪽바퀴 다 바닥인 경우 회전속도, 중력 초기화
+        if (m_IsGround == false)
+        {
+            if ((frontIsGround | backIsGround) == false)
+            {
+                m_CurRotXSpeed = 0;
+            }
+            else
+            {
+                if (frontIsGround == true)
+                {
+                    m_CurRotXSpeed += m_RotXAcc * Time.fixedDeltaTime;
+                }
+                if (backIsGround == true)
+                {
+                    m_CurRotXSpeed -= m_RotXAcc * Time.fixedDeltaTime;
+                }
+            }
+        }
+        else
+        {
+            //중력
+        }
     }
     void VelocityFixedUpdate()
     {
         switch(m_RotType)
         {
             case CarRotType.Left:
-                m_CurRot -= m_HandleSensitivity * Time.fixedDeltaTime;
-                if (m_CurRot < -m_MaxRot)
+                m_CurRotY -= m_HandleSensitivity * Time.fixedDeltaTime;
+                if (m_CurRotY < -m_MaxRot)
                 {
-                    m_CurRot = -m_MaxRot;
+                    m_CurRotY = -m_MaxRot;
                 }
 
                 break;
             case CarRotType.Right:
-                m_CurRot += m_HandleSensitivity * Time.fixedDeltaTime;
-                if (m_CurRot > m_MaxRot)
+                m_CurRotY += m_HandleSensitivity * Time.fixedDeltaTime;
+                if (m_CurRotY > m_MaxRot)
                 {
-                    m_CurRot = m_MaxRot;
+                    m_CurRotY = m_MaxRot;
                 }
                 break;
             case CarRotType.Straight:
                 float handleRotAngle = m_HandleSensitivity * Time.fixedDeltaTime;
-                if (Mathf.Abs(m_CurRot) < handleRotAngle)
+                if (Mathf.Abs(m_CurRotY) < handleRotAngle)
                 {
-                    m_CurRot = 0;
+                    m_CurRotY = 0;
                 }
                 else
                 {
-                    m_CurRot -= handleRotAngle * Mathf.Sign(m_CurRot);
+                    m_CurRotY -= handleRotAngle * Mathf.Sign(m_CurRotY);
                 }
                 break;
         }
         //회전감속
-        m_Speed *= 1 - Mathf.Pow(Mathf.Clamp01(Mathf.Sin(Mathf.Abs(m_CurRot * Mathf.Deg2Rad))), 3);
+        m_Speed *= 1 - Mathf.Pow(Mathf.Clamp01(Mathf.Sin(Mathf.Abs(m_CurRotY * Mathf.Deg2Rad))), 3);
 
-
-        m_FrontTire.SetRot(m_CurRot);
+        m_FrontTire.SetRot(m_CurRotY);
         switch(m_AccType)
         {
             case CarAccType.None:
@@ -170,6 +211,12 @@ public class Autobike : MonoBehaviour
                 break;
         }
     }
+    void MoveTire()
+    {
+        m_FrontTire.Move(transform.right, m_Speed);
+        m_BackTire.Move(transform.right, m_Speed);
+        //Debug.Log(frontTirePos + " " + backTirePos);
+    }
     void SetTransform()
     {
         Vector3 frontTirePos = m_FrontTire.transform.position;
@@ -183,7 +230,7 @@ public class Autobike : MonoBehaviour
         rotMat.SetColumn(1, new Vector4(up.x, up.y, up.z, 0));
         rotMat.SetColumn(2, new Vector4(forward.x, forward.y, forward.z, 0));
         rotMat.SetColumn(3, new Vector4(0, 0, 0, 1));
-        float curRotZAnimAngle = -(m_CurRot / m_MaxRot) * Mathf.Clamp01((m_Speed - m_MaxSpeedBack) / (m_MaxSpeedForward - m_MaxSpeedBack)) * m_RotZAnimMaxAngle;
+        float curRotZAnimAngle = -(m_CurRotY / m_MaxRot) * Mathf.Clamp01((m_Speed - m_MaxSpeedBack) / (m_MaxSpeedForward - m_MaxSpeedBack)) * m_RotZAnimMaxAngle;
         Matrix4x4 rotZAnimMat = Matrix4x4.Rotate(Quaternion.AngleAxis(curRotZAnimAngle, forward));
         rotMat = rotZAnimMat * rotMat;
 

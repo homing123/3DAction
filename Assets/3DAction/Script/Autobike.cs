@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class Autobike : MonoBehaviour
 {
@@ -6,7 +7,7 @@ public class Autobike : MonoBehaviour
     CarRotType m_RotType = CarRotType.Straight;
 
     float m_Speed;
-    Vector3 m_Velocity;
+    public Vector3 m_AirVelocity;
     float m_CurRotY;
     float m_CurRotXSpeed;
     bool m_IsGround;
@@ -26,10 +27,13 @@ public class Autobike : MonoBehaviour
     [SerializeField] float m_RotZAnimMaxAngle;
     [SerializeField] float m_RotXAcc;
     [SerializeField] float m_AirDamping;
+    [SerializeField] float m_GravityAcc;
 
     Vector3 m_FrontOriginOffset;
     Vector3 m_BackOriginOffset;
     Vector3 m_BodyOffset;
+
+    [SerializeField] float m_StartSpeed;
 
 
     private void OnEnable()
@@ -50,6 +54,10 @@ public class Autobike : MonoBehaviour
     }
     private void Update()
     {
+        if(Input.GetKeyDown(KeyCode.P))
+        {
+            m_Speed = m_StartSpeed;
+        }
         if(InputM.InputDir.y!= 0)
         {
             Acc(InputM.InputDir.y > 0 ? CarAccType.Forward : CarAccType.Back);
@@ -88,51 +96,10 @@ public class Autobike : MonoBehaviour
     {
         bool frontIsGround = m_FrontTire.CheckGround();
         bool backIsGround = m_BackTire.CheckGround();
-        m_IsGround = frontIsGround & backIsGround;
-
-        if((frontIsGround | backIsGround) == true)
-        {
-            //땅
-            m_CurRotXSpeed = 0;
-        }
-        else if((frontIsGround & backIsGround) == true)
-        {
-            //공중
-        }
-        else
-        {
-            //한쪽바퀴만
-
-        }
-        //한쪽 바퀴만 떠있는 경우 회전하되 반대쪽 땅에붙은 바퀴기준으로 회전함
-        //양쪽바퀴 다 떠있는 경우 공중에서 중력받고 회전속도 유지됨
-        //양쪽바퀴 다 바닥인 경우 회전속도, 중력 초기화
-        if (m_IsGround == false)
-        {
-            if ((frontIsGround | backIsGround) == false)
-            {
-                m_CurRotXSpeed = 0;
-            }
-            else
-            {
-                if (frontIsGround == true)
-                {
-                    m_CurRotXSpeed += m_RotXAcc * Time.fixedDeltaTime;
-                }
-                if (backIsGround == true)
-                {
-                    m_CurRotXSpeed -= m_RotXAcc * Time.fixedDeltaTime;
-                }
-            }
-        }
-        else
-        {
-            //중력
-        }
     }
-    void VelocityFixedUpdate()
+    void GroundVelocity()
     {
-        switch(m_RotType)
+        switch (m_RotType)
         {
             case CarRotType.Left:
                 m_CurRotY -= m_HandleSensitivity * Time.fixedDeltaTime;
@@ -165,7 +132,7 @@ public class Autobike : MonoBehaviour
         m_Speed *= 1 - Mathf.Pow(Mathf.Clamp01(Mathf.Sin(Mathf.Abs(m_CurRotY * Mathf.Deg2Rad))), 3);
 
         m_FrontTire.SetRot(m_CurRotY);
-        switch(m_AccType)
+        switch (m_AccType)
         {
             case CarAccType.None:
                 {
@@ -211,14 +178,105 @@ public class Autobike : MonoBehaviour
                 break;
         }
     }
+    //각 바퀴는 매 물리프레임마다 땅에서의 노말값을 오토바이에 저장
+    void VelocityFixedUpdate()
+    {
+        bool frontIsGround = m_FrontTire.m_isGround;
+        bool backIsGround = m_BackTire.m_isGround;
+        if ((frontIsGround & backIsGround) == true)
+        {
+            //땅
+            m_CurRotXSpeed = 0;
+            m_AirVelocity = Vector3.zero;
+            GroundVelocity();
+        }
+        else if ((frontIsGround | backIsGround) == false)
+        {
+            //공중
+            m_Speed = m_Speed - m_Speed * m_AirDamping * Time.fixedDeltaTime;
+            m_AirVelocity.y -= m_GravityAcc * Time.fixedDeltaTime;
+        }
+        else
+        {
+            //한쪽바퀴만
+            if (frontIsGround == true)
+            {
+                m_CurRotXSpeed += m_RotXAcc * Time.fixedDeltaTime;
+            }
+            if (backIsGround == true)
+            {
+                m_CurRotXSpeed -= m_RotXAcc * Time.fixedDeltaTime;
+            }
+        }
+        //한쪽 바퀴만 떠있는 경우 회전하되 반대쪽 땅에붙은 바퀴기준으로 회전함
+        //양쪽바퀴 다 떠있는 경우 공중에서 중력받고 회전속도 유지됨
+        //양쪽바퀴 다 바닥인 경우 회전속도, 중력 초기화
+
+
+
+    }
+
+   
     void MoveTire()
     {
-        m_FrontTire.Move(transform.right, m_Speed);
-        m_BackTire.Move(transform.right, m_Speed);
+        bool frontIsGround = m_FrontTire.m_isGround;
+        bool backIsGround = m_BackTire.m_isGround;
+        if ((frontIsGround & backIsGround) == true)
+        {
+            //땅
+            m_AirVelocity = m_FrontTire.GroundMove(transform.right, m_Speed) / Time.fixedDeltaTime;
+            m_AirVelocity = m_BackTire.GroundMove(transform.right, m_Speed) / Time.fixedDeltaTime;
+        }
+        else if ((frontIsGround | backIsGround) == false)
+        {
+            //공중
+            m_FrontTire.AirMove(m_AirVelocity);
+            m_BackTire.AirMove(m_AirVelocity);
+        }
+        else
+        {
+            //한쪽바퀴만
+            //공중바퀴는 땅바퀴의 움직임을 따라가고 x축회전은 땅바퀴 위치를 기준으로 회전한다. x
+            //공중 바퀴는 마지막땅에서의 움직임 방향으로 움직이고 공중 움직임 판정으로 움직이고 x축회전은 땅바퀴 위치를 기준으로 회전한다. o
+            if (frontIsGround == true)
+            {
+                m_AirVelocity = m_FrontTire.GroundMove(transform.right, m_Speed) / Time.fixedDeltaTime;
+                m_BackTire.AirMove(m_AirVelocity);
+            }
+            if (backIsGround == true)
+            {
+                m_FrontTire.AirMove(m_AirVelocity);
+                m_AirVelocity = m_BackTire.GroundMove(transform.right, m_Speed) / Time.fixedDeltaTime;
+            }
+        }
+      
         //Debug.Log(frontTirePos + " " + backTirePos);
     }
     void SetTransform()
     {
+        bool frontIsGround = m_FrontTire.m_isGround;
+        bool backIsGround = m_BackTire.m_isGround;
+        if ((frontIsGround & backIsGround) == true)
+        {
+            //땅
+        }
+        else if ((frontIsGround | backIsGround) == false)
+        {
+            //공중
+          
+        }
+        else
+        {
+            //한쪽바퀴만
+            if (frontIsGround == true)
+            {
+                
+            }
+            if (backIsGround == true)
+            {
+                
+            }
+        }
         Vector3 frontTirePos = m_FrontTire.transform.position;
         Vector3 backTirePos = m_BackTire.transform.position;
         Vector3 forward = (frontTirePos - backTirePos).normalized;

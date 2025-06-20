@@ -31,6 +31,7 @@ public class Tire : MonoBehaviour
     [SerializeField] bool m_hasGizmo;
     [SerializeField] bool m_hasLog;
     Quaternion m_OriginQuat;
+    Vector3 m_LastMoveDir;
     private void Awake()
     {
         m_Rigid = GetComponent<Rigidbody>();
@@ -43,16 +44,33 @@ public class Tire : MonoBehaviour
     }
     private void OnDrawGizmos()
     {
-        if(m_hasGizmo==false)
+        if (m_hasGizmo == false)
         {
             return;
         }
+        if (GetGroundHit(out RaycastHit hit))
+        {
+            Gizmos.color = Color.white;
+            Gizmos.DrawSphere(hit.point, SphereRayCastRadius);
+        }
+
+        Gizmos.color = Color.black;
+        Gizmos.DrawLine(transform.position, transform.position - transform.up); 
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawLine(transform.position, transform.position + m_GroundNormal);
+        Gizmos.color = Color.blue;
+        Gizmos.DrawLine(transform.position, transform.position - m_LastMoveDir);
+    }
+
+    bool GetGroundHit(out RaycastHit hit)
+    {
         Vector3 rayStartPos = transform.position + transform.up * 0.5f;
         float rayDis = SphereRaycastDis + 0.5f;
         RaycastHit[] hits = Physics.SphereCastAll(rayStartPos, SphereRayCastRadius, -transform.up, rayDis, 1 << (int)Layer.Ground);
+        hit = default;
         if (hits.Length == 0)
         {
-            
+            return false;
         }
         else
         {
@@ -60,10 +78,7 @@ public class Tire : MonoBehaviour
             Vector3 tire2Hitpoint = hits[0].point - transform.position;
             float nearSqauredDis = tire2Hitpoint.sqrMagnitude;
             int nearIdx = 0;
-            for(int i=0;i<hits.Length; i++)
-            {
-                Gizmos.DrawCube(hits[i].point, new Vector3(0.2f, 0.2f, 0.2f));
-            }
+
             for (int i = 1; i < hits.Length; i++)
             {
                 tire2Hitpoint = hits[i].point - transform.position;
@@ -75,47 +90,53 @@ public class Tire : MonoBehaviour
                 }
             }
             topHit = hits[nearIdx];
-            Gizmos.DrawSphere(topHit.point, SphereRayCastRadius);
+            hit = topHit;
         }
-        Gizmos.DrawLine(transform.position, transform.position - transform.up);
+        return true;
     }
     public bool CheckGround()
     {
-        //Debug.Log(-transform.up);
-        Vector3 rayStartPos = transform.position + transform.up * 0.5f;
-        float rayDis = SphereRaycastDis + 0.5f;
-        RaycastHit[] hits = Physics.SphereCastAll(rayStartPos, SphereRayCastRadius, -transform.up, rayDis, 1 << (int)Layer.Ground);
-        if (hits.Length == 0)
+        if(GetGroundHit(out RaycastHit hit))
         {
-            m_isGround = false;
-            return false;
-        }
-        else
-        {
-            RaycastHit topHit;
-            Vector3 tire2Hitpoint = hits[0].point - transform.position;
-            float nearSqauredDis = tire2Hitpoint.sqrMagnitude;
-            int nearIdx = 0;
-            
-            for (int i=1;i<hits.Length;i++)
+            BoxCollider box = hit.collider as BoxCollider;
+            Vector3 normal = Vector3.zero;
+            if (box != null)
             {
-                tire2Hitpoint = hits[i].point - transform.position;
-                float disSquare = tire2Hitpoint.sqrMagnitude;
-                if(nearSqauredDis > disSquare)
+                normal = Util.NotInterpolationNormalBox(hit.point, box);
+            }
+            else
+            {
+                normal = hit.normal;
+            }
+            if (m_LastMoveDir != Vector3.zero)
+            {
+                float cos = Vector3.Dot(normal, m_LastMoveDir);
+                float angle = Mathf.Acos(cos) * Mathf.Rad2Deg;
+                if (m_hasLog)
                 {
-                    nearIdx = i;
-                    nearSqauredDis = disSquare;
+                    Debug.Log(angle);
+                }
+                if (angle > 85)
+                {
+                    m_GroundNormal = normal;
+                    m_isGround = true;
+                    m_GroundCol = hit.collider;
+                    return true;
                 }
             }
-            topHit = hits[nearIdx];
-            m_GroundNormal = topHit.normal;
-            m_isGround = true;
-            m_GroundCol = topHit.collider;
-            return true;
+            else
+            {
+                m_GroundNormal = normal;
+                m_isGround = true;
+                m_GroundCol = hit.collider;
+                return true;
+            }
         }
+        m_isGround = false;
+        return false;
     }
 
-    public void Move(Vector3 bodyRight, float speed)
+    public Vector3 GroundMove(Vector3 bodyRight, float speed)
     {
         float dis = speed * Time.fixedDeltaTime;
         Vector3 forward = Vector3.Cross(bodyRight, m_GroundNormal).normalized;
@@ -145,17 +166,29 @@ public class Tire : MonoBehaviour
             if (Physics.ComputePenetration(m_Col, transform.position, transform.rotation, m_GroundCol, m_GroundCol.transform.position, m_GroundCol.transform.rotation, out Vector3 direction, out float distance))
             {
                 transform.position += direction * (distance - 0.01f);
+                moveVector += direction * (distance - 0.01f);
             }
         }
-        else
-        {
-            moveVector = forward * dis;
-            transform.position += moveVector;
-        }
-        
+        m_LastMoveDir = moveVector.normalized;
 
-
+        return moveVector;
     }
+    public void AirMove(Vector3 velocity)
+    {
+        Vector3 moveVector = Vector3.zero;
+        moveVector += velocity * Time.fixedDeltaTime;
+        transform.position += moveVector;
+        if (GetGroundHit(out RaycastHit hit))
+        {
+            if (Physics.ComputePenetration(m_Col, transform.position, transform.rotation, hit.collider, hit.transform.position, hit.transform.rotation, out Vector3 direction, out float distance))
+            {
+                transform.position += direction * (distance - 0.01f);
+                moveVector += direction * (distance - 0.01f);
+            }
+        }
+        m_LastMoveDir = moveVector.normalized;
+    }
+
     public void SetRot(float rot)
     {
         m_Rot = rot;

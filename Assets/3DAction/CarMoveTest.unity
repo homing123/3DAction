@@ -2389,12 +2389,28 @@ PrefabInstance:
       value: 0.08
       objectReference: {fileID: 0}
     - target: {fileID: 6473203671719842162, guid: 526c855610639884c95c82548232a2eb, type: 3}
+      propertyPath: m_hasLog
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6473203671719842162, guid: 526c855610639884c95c82548232a2eb, type: 3}
       propertyPath: _rayradius
       value: 0.32
       objectReference: {fileID: 0}
     - target: {fileID: 6473203671719842162, guid: 526c855610639884c95c82548232a2eb, type: 3}
       propertyPath: m_hasGizmo
-      value: 1
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7816993822344285251, guid: 526c855610639884c95c82548232a2eb, type: 3}
+      propertyPath: m_AirDamping
+      value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 7816993822344285251, guid: 526c855610639884c95c82548232a2eb, type: 3}
+      propertyPath: m_GravityAcc
+      value: 9.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 7816993822344285251, guid: 526c855610639884c95c82548232a2eb, type: 3}
+      propertyPath: m_StartSpeed
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 7928988113507001838, guid: 526c855610639884c95c82548232a2eb, type: 3}
       propertyPath: m_Name
@@ -2403,6 +2419,10 @@ PrefabInstance:
     - target: {fileID: 8143538431099189214, guid: 526c855610639884c95c82548232a2eb, type: 3}
       propertyPath: _raydis
       value: 0.08
+      objectReference: {fileID: 0}
+    - target: {fileID: 8143538431099189214, guid: 526c855610639884c95c82548232a2eb, type: 3}
+      propertyPath: m_hasLog
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8143538431099189214, guid: 526c855610639884c95c82548232a2eb, type: 3}
       propertyPath: _rayradius

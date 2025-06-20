@@ -73,6 +73,38 @@ public class Util
 
         return new Vector2(u * Util.CanvasResolutionWidth, v * Util.CanvasResolutionHeight);
     }
+
+    /// <summary>
+    /// 박스 콜라이더의 보간되지않은 노말을 얻는 함수
+    /// </summary>
+    /// <param name="hitPos"></param>
+    /// <param name="box"></param>
+    /// <returns></returns>
+    public static Vector3 NotInterpolationNormalBox(Vector3 hitPos, BoxCollider box)
+    {
+        Vector3 localHitPos = box.transform.InverseTransformPoint(hitPos);
+        Vector3 halfSize = box.size * 0.5f;
+        float disX = Mathf.Abs(Mathf.Abs(localHitPos.x) - halfSize.x);
+        float disY = Mathf.Abs(Mathf.Abs(localHitPos.y) - halfSize.y);
+        float disZ = Mathf.Abs(Mathf.Abs(localHitPos.z) - halfSize.z);
+
+        Vector3 localNormal = Vector3.zero;
+        if(disX < disY && disX < disZ)
+        {
+            localNormal = new Vector3(Mathf.Sign(localHitPos.x), 0, 0);
+        }
+        else if(disY < disZ)
+        {
+            localNormal = new Vector3(0, Mathf.Sign(localHitPos.y), 0);
+        }
+        else
+        {
+            localNormal = new Vector3(0, 0, Mathf.Sign(localHitPos.z));
+        }
+
+        Vector3 worldNormal = box.transform.TransformDirection(localNormal).normalized;
+        return worldNormal;
+    }
 }
 public static class UtilEX
 {

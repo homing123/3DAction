@@ -48,13 +48,14 @@ public class CamM : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+
+    private void LateUpdate()
     {
-        if(Input.GetKeyDown(KeyCode.Q))
+        if (Input.GetKeyDown(KeyCode.Q))
         {
             m_CamRotActive = !m_CamRotActive;
         }
-        if(m_CamRotActive== false)
+        if (m_CamRotActive == false)
         {
             return;
         }
@@ -64,7 +65,7 @@ public class CamM : MonoBehaviour
         LookTarget();
     }
 
- 
+
     void LookTarget()
     {
         if(m_Target == null)

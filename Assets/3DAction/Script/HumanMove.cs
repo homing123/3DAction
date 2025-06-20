@@ -156,7 +156,7 @@ public class HumanMove : MonoBehaviour
     {
         Vector3 rayStartPos = m_Rigid.position + new Vector3(0, 0.5f, 0);
         Vector3 halfExSize = new Vector3(0.2f, 0.05f, 0.2f);
-        bool isGround = Physics.BoxCast(rayStartPos, halfExSize, Vector3.down, out RaycastHit hit, Quaternion.Euler(0, transform.rotation.y, 0), 0.5f, (1 << (int)LAYER.OBJECT | 1 << (int)LAYER.GROUND));
+        bool isGround = Physics.BoxCast(rayStartPos, halfExSize, Vector3.down, out RaycastHit hit, Quaternion.Euler(0, transform.rotation.y, 0), 0.5f, (1 << (int)Layer.Object | 1 << (int)Layer.Ground));
         
         if(isGround)
         {

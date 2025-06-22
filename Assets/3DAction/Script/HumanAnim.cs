@@ -1,32 +1,32 @@
 using System.Collections.Generic;
 using UnityEngine;
-public enum ANIM_TRIGGER
+public enum Anim_Trigger
 {
-    IDLE = 0,
-    WALK = 1,
-    RUN = 2,
-    JUMP = 3,
-    FALLING = 4,
+    Idle = 0,
+    Walk = 1,
+    Run = 2,
+    Jump = 3,
+    Falling = 4,
 }
 public class HumanAnim : MonoBehaviour
 {
-    public static Dictionary<ANIM_TRIGGER, string> D_AnimTrigger = new Dictionary<ANIM_TRIGGER, string>()
+    public static Dictionary<Anim_Trigger, string> D_AnimTrigger = new Dictionary<Anim_Trigger, string>()
     {
-        { ANIM_TRIGGER.IDLE, "Idle" },
-        { ANIM_TRIGGER.WALK, "Walk" },
-        { ANIM_TRIGGER.RUN, "Run" },
-        { ANIM_TRIGGER.JUMP, "Jump" },
-        { ANIM_TRIGGER.FALLING, "Falling" }
+        { Anim_Trigger.Idle, "Idle" },
+        { Anim_Trigger.Walk, "Walk" },
+        { Anim_Trigger.Run, "Run" },
+        { Anim_Trigger.Jump, "Jump" },
+        { Anim_Trigger.Falling, "Falling" }
     };
     Animator m_Anim;
-    ANIM_TRIGGER m_CurAnimTrigger = ANIM_TRIGGER.IDLE;
-    ANIM_TRIGGER m_LastTrigger = ANIM_TRIGGER.WALK;
+    Anim_Trigger m_CurAnimTrigger = Anim_Trigger.Idle;
+    Anim_Trigger m_LastTrigger = Anim_Trigger.Walk;
     private void Awake()
     {
         m_Anim = GetComponentInChildren<Animator>();
     }
 
-    public void SetAnimTrigger(ANIM_TRIGGER animTrigger)
+    public void SetAnimTrigger(Anim_Trigger animTrigger)
     {
         if (m_CurAnimTrigger == animTrigger)
         {

@@ -114,6 +114,10 @@ public static class UtilEX
     {
         return new Vector2(vt3.x, vt3.z);
     }
+    public static Vector3 VT2XZToVT3(this Vector2 vt2xz, float y = 0)
+    {
+        return new Vector3(vt2xz.x, y, vt2xz.y);
+    }
 
     public static void SetScreenPosition(this RectTransform recttransform, Vector2 screenPos)
     {

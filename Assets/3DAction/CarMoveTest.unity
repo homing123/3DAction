@@ -1449,14 +1449,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7d952198d4bdbb046bf8b42d9bb53a5b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_CamRotActive: 0
-  m_MouseRotSpeed: 200
-  m_Dis: 5
-  m_Height: 1
-  m_PlayerFocusHeight: 1.7
-  m_CarFocusHeight: 5
-  m_CarDis: 1
-  m_CarHeight: 1.7
+  m_CamDis: 0
 --- !u!1 &1679122874
 GameObject:
   m_ObjectHideFlags: 0

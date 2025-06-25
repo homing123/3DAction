@@ -2,7 +2,8 @@ using System;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-
+using Cysharp.Threading.Tasks;
+using System.Threading;
 public enum Skill_Target_Type
 {
     Monster = 1 << 0,
@@ -19,6 +20,7 @@ public enum Bio_Type
 [RequireComponent (typeof(Status))]
 public class Bio : MonoBehaviour
 {
+    const float MoveDirAngularSpeed = 1440;
 
     //공통 애니메이션 이름
 
@@ -34,6 +36,14 @@ public class Bio : MonoBehaviour
     {
         m_Status.OnDeath += Death;
         m_Status.OnStateChanged += StateChanged;
+    }
+    protected virtual void Update()
+    {
+
+    }
+    protected virtual void FixedUpdate()
+    {
+
     }
    
     void Death()
@@ -78,6 +88,22 @@ public class Bio : MonoBehaviour
     {
         m_Status.EndSkillCasting();
     }
+    protected async UniTask RotToDir(Vector2 dir, CancellationToken ct)
+    {
+        while (true)
+        {
+            if (ct.IsCancellationRequested)
+            {
+                return;
+            }
+            await UniTask.Yield();
+            UpdateAngular(dir, out bool arrived);
+            if(arrived)
+            {
+                break;
+            }
+        }
+    }
 
    
     
@@ -87,9 +113,36 @@ public class Bio : MonoBehaviour
         return col.TryGetComponent(out bio);
     }
 
-   
+    public virtual Vector3 GetHitPos()
+    {
+        return transform.position + Vector3.up * 1.2f;
+    }
+
+    public void UpdateAngular(Vector2 dir, out bool arrived)
+    {
+        Vector3 moveDirHor = new Vector3(dir.x, 0, dir.y);
+        if (moveDirHor == Vector3.zero)
+        {
+            arrived = false;
+            return;
+        }
+        moveDirHor.Normalize();
+        Quaternion curRot = transform.rotation;
+        Quaternion lookRot = Quaternion.LookRotation(moveDirHor, Vector3.up);
+        float maxDegree = MoveDirAngularSpeed * Time.deltaTime;
+        if(Quaternion.Angle(curRot, lookRot) < maxDegree)
+        {
+            transform.rotation = lookRot;
+            arrived = true;
+        }
+        else
+        {
+            transform.rotation = Quaternion.RotateTowards(curRot, lookRot, maxDegree);
+            arrived = false;
+        }
+    }
 
 
-   
+
 
 }

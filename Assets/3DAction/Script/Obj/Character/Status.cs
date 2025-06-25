@@ -141,7 +141,7 @@ public class Status : MonoBehaviour
     // 데미지를 받는 메서드
     public void TakeDamage(in SkillInfo skillinfo)
     {
-        Debug.Log($"뎀지받음 {transform.name} {skillinfo.damage} {skillinfo.knockbackDis}");
+        //Debug.Log($"뎀지받음 {transform.name} {skillinfo.damage} {skillinfo.knockbackDis}");
         if (m_Death) return;
 
         // 방어력에 의한 데미지 감소 계산

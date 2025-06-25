@@ -1,12 +1,24 @@
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Threading;
+//캐릭터 스킬
+//기본공격
+//Q,W,E,R
+//주문
+//무기스킬
+
+//기본공격은 현재 공격 대상이 사거리 안에 있는지 확인 후 사거리 안에 있다면 자동 시전
+//내부 쿨타임(공격속도)를 가지며, 공격모션 선딜후딜이 있음
+
+//다른 스킬들은 사용자 입력에 시전시도를 함
 
 public class Vanya : Character
 {
     [SerializeField] float m_AttackRange;
+    [SerializeField] Vanya_Attack m_VanyaAttackPrefab;
     [SerializeField] Vanya_Q m_VanyaQPrefab;
     [SerializeField] Transform m_VanyaQStartPos;
+    [SerializeField] Skill m_AttackSkill;
     [SerializeField] Skill m_QSkill;
     [SerializeField] Skill m_WSkill;
     [SerializeField] Skill m_ESkill;
@@ -28,8 +40,9 @@ public class Vanya : Character
         m_SkillCoolTime = new float[7];
 
     }
-    private void Update()
+    protected override void Update()
     {
+        base.Update();
         for (int i = 0; i < 7; i++)
         {
             m_SkillCoolTime[i] = m_SkillCoolTime[i] > 0 ? m_SkillCoolTime[i] - Time.deltaTime : m_SkillCoolTime[i];
@@ -58,6 +71,43 @@ public class Vanya : Character
         QSkill(m_SkillToken.Token).Forget();
     }
 
+    [SerializeField] float BaseAttack_PreDelay;
+    async UniTask BaseAttack(CancellationToken ct)
+    {
+        float preDelay = BaseAttack_PreDelay;
+        float curTime = 0;
+        if(m_AttackTarget == null)
+        {
+            Debug.Log("없는디어캐됨");
+        }
+        Vector2 dir = (m_AttackTarget.transform.position - transform.position).VT2XZ().normalized;
+        await RotToDir(dir, ct);
+        while (curTime < preDelay)
+        {
+            if (ct.IsCancellationRequested)
+            {
+                return;
+            }
+            await UniTask.Yield();
+
+            curTime += Time.deltaTime;
+        }
+
+        if (m_AttackTarget != null)
+        {
+            float disToTarget = (transform.position - m_AttackTarget.transform.position).VT2XZ().magnitude;
+            if (disToTarget <= GetAttackRange())
+            {
+                Vanya_Attack vanyaAttack = Instantiate(m_VanyaAttackPrefab, m_VanyaQStartPos.position, Quaternion.identity);
+                vanyaAttack.Setting(this, m_AttackTarget, in m_AttackSkill);
+            }
+        }
+        else
+        {
+            Debug.Log("타겟없음");
+        }
+    }
+
     [SerializeField] float QSkill_PreDelay;
     void QSkillReturn2Vanya()
     {
@@ -68,6 +118,7 @@ public class Vanya : Character
         float preDelay = QSkill_PreDelay;
         float curTime = 0;
         Vector2 dir = PlayerInput.Ins.GetSkillDirVT2(transform.position);
+        await RotToDir(dir, ct);
         while (curTime < preDelay)
         {
             if(ct.IsCancellationRequested)
@@ -85,6 +136,10 @@ public class Vanya : Character
     }
 
 
+    public override float GetAttackRange()
+    {
+        return m_AttackRange;
+    }
     protected override void TryUseSkill(KeyCode key)
     {
         if (key == KeyCode.Q)
@@ -92,9 +147,10 @@ public class Vanya : Character
             TryUseSkill(0);
         }
     }
-    protected override float GetAttackRange()
+    protected override void Attack()
     {
-        return m_AttackRange;
+        m_SkillToken = new CancellationTokenSource();
+        BaseAttack(m_SkillToken.Token).Forget();
     }
 
 }

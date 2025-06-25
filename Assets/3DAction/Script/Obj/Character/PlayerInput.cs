@@ -93,10 +93,10 @@ public class PlayerInput : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
         {
             inputinfo = default;
-            isInput = true;
             if(m_isAttack)
             {
-                switch(m_MouseTargetType)
+                isInput = true;
+                switch (m_MouseTargetType)
                 {
                     case MouseTargetType.None:
                         inputinfo.command = InputCommandType.AttackDesti;

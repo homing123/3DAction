@@ -5,11 +5,11 @@ using UnityEngine.AI;
 
 public class CharacterMove : MonoBehaviour
 {
-    const float MoveDirAngularSpeed = 1440;
     NavMeshAgent m_NavAgent;
     HumanAnim m_HumanAnim;
     bool m_CallOnArrived = true;
     Status m_Status;
+    Character m_Character;
     public bool m_IsMove { get { return !m_NavAgent.isStopped; } }
 
     [SerializeField] Transform m_MoveDestiObj;
@@ -18,6 +18,7 @@ public class CharacterMove : MonoBehaviour
         m_NavAgent = GetComponent<NavMeshAgent>();
         m_HumanAnim = GetComponent<HumanAnim>();
         m_Status = GetComponent<Status>();
+        m_Character = GetComponent<Character>();
     }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -39,28 +40,19 @@ public class CharacterMove : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        UpdateAngular();
-        CheckMoveArrived();
-    }
-    
-    void UpdateAngular()
-    {
-        Vector3 moveDirHor = new Vector3(m_NavAgent.velocity.x, 0, m_NavAgent.velocity.z);
-        if(moveDirHor == Vector3.zero)
+        if (m_IsMove == true)
         {
-            return;
+            m_Character.UpdateAngular(new Vector2(m_NavAgent.velocity.x, m_NavAgent.velocity.z), out bool arrived);
+            CheckMoveArrived();
         }
-        moveDirHor.Normalize();
-        Quaternion curRot = transform.rotation;
-        Quaternion lookRot = Quaternion.LookRotation(moveDirHor, Vector3.up);
-        float maxDegree = MoveDirAngularSpeed * Time.deltaTime;
-        transform.rotation = Quaternion.RotateTowards(curRot, lookRot, maxDegree);
     }
     void CheckMoveArrived()
     {
-        if(m_CallOnArrived == false && m_NavAgent.pathStatus == NavMeshPathStatus.PathComplete && m_NavAgent.remainingDistance < 0.1f)
+        float remainDis = Vector3.Distance(m_NavAgent.destination, transform.position);
+        if (m_CallOnArrived == false && m_NavAgent.pathStatus == NavMeshPathStatus.PathComplete && remainDis < 0.1f)
         {
             m_CallOnArrived = true;
+            m_NavAgent.isStopped = true;
             OnMoveArrived();
         }
     }
@@ -83,6 +75,6 @@ public class CharacterMove : MonoBehaviour
     {
         m_NavAgent.isStopped = true;
     }
-    
-    
+
+   
 }

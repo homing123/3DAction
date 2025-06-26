@@ -1,3 +1,4 @@
+using System.Threading;
 using Unity.VisualScripting;
 using UnityEngine;
 using static UnityEditor.PlayerSettings;
@@ -24,9 +25,7 @@ public abstract class Character : Bio
     CharacterAction m_CharacterAction;
     Transform m_ObjectTarget;
 
-
     protected Bio m_AttackTarget;
-
     public int m_TeamID { get; private set; }
     public Vector3 m_LastMoveDis { get; private set; }
     float m_CurAttackDelay;
@@ -167,7 +166,7 @@ public abstract class Character : Bio
                     if (TryGetNearestTargetAttackRange(out target))
                     {
                         m_AttackTarget = target;
-                        TryAttack();
+                        CheckAttackDelay();
                     }
                 }
                 else
@@ -175,7 +174,7 @@ public abstract class Character : Bio
                     float dis2Target = (m_AttackTarget.transform.position - transform.position).VT2XZ().magnitude;
                     if (dis2Target <= GetAttackRange())
                     {
-                        TryAttack();
+                        CheckAttackDelay();
                     }
                     else
                     {
@@ -183,7 +182,7 @@ public abstract class Character : Bio
                         if (TryGetNearestTargetAttackRange(out target))
                         {
                             m_AttackTarget = target;
-                            TryAttack();
+                            CheckAttackDelay();
                         }
                     }
                 }
@@ -209,7 +208,7 @@ public abstract class Character : Bio
                     else
                     {
                         m_Move.MoveStop();
-                        TryAttack();
+                        CheckAttackDelay();
                     }
                 }
                 break;
@@ -224,11 +223,15 @@ public abstract class Character : Bio
         switch (m_CharacterAction)
         {
             case CharacterAction.Move2Desti:
+                CancelAttack();
                 m_Move.Move(groundPos);
                 break;
             case CharacterAction.Move2Object:
                 break;
             case CharacterAction.Stop:
+                m_Move.MoveStop();
+                CancelAttack();
+                break;
             case CharacterAction.Hold:
                 m_Move.MoveStop();
                 break;
@@ -251,26 +254,33 @@ public abstract class Character : Bio
                 }
                 break;
             case CharacterAction.ChaseTarget:
+                if(m_AttackTarget != null && m_AttackTarget != target)
+                {
+                    CancelAttack();
+                }
                 m_AttackTarget = target;
                 break;
         }
     }
 
-    void TryAttack()
+    void CheckAttackDelay()
     {
         float attackDelay = 1 / m_Status.m_AttackSpeed;
-        if(m_CurAttackDelay >= attackDelay)
+        if (m_CurAttackDelay >= attackDelay)
         {
-            Attack();
-            m_CurAttackDelay = 0;
+            if (TryAttack())
+            {
+                m_CurAttackDelay = 0;
+            }
         }
     }
     public void SetTeamID(int teamid)
     {
         m_TeamID = teamid;
     }
-
-    protected abstract void TryUseSkill(KeyCode key);
-    protected abstract void Attack();
+    protected abstract bool TryUseSkill(KeyCode key);
+    protected abstract bool TryAttack();
     public abstract float GetAttackRange();
+    public abstract void CancelAttack();
+    public abstract void CancelSkill();
 }

@@ -15,10 +15,11 @@ using System.Threading;
 //기본공격은 이동으로 취소되지만 스킬은 이동으로 취소 
 public class Vanya : Character
 {
-    [SerializeField] float m_AttackRange;
     [SerializeField] Vanya_Attack m_VanyaAttackPrefab;
     [SerializeField] Vanya_Q m_VanyaQPrefab;
     [SerializeField] Transform m_VanyaQStartPos;
+
+    [SerializeField] float m_AttackRange;
     [SerializeField] Skill m_AttackSkill;
     [SerializeField] Skill m_QSkill;
     [SerializeField] Skill m_WSkill;
@@ -26,10 +27,12 @@ public class Vanya : Character
     [SerializeField] Skill m_RSkill;
 
     Skill[] m_Skill;
-
     float[] m_SkillCoolTime;
 
-    CancellationTokenSource m_SkillToken;
+    bool m_IsSkill;
+    CancellationTokenSource m_SkillCTS;
+    bool m_IsAttack;
+    CancellationTokenSource m_AttackCTS;
     protected override void Start()
     {
         base.Start();
@@ -49,32 +52,24 @@ public class Vanya : Character
             m_SkillCoolTime[i] = m_SkillCoolTime[i] > 0 ? m_SkillCoolTime[i] - Time.deltaTime : m_SkillCoolTime[i];
         }
     }
-
-    void TryUseSkill(int idx)
+    protected override bool TryAttack()
     {
-        if (m_SkillCoolTime[idx] > 0)
+        if (m_IsSkill || m_IsAttack)
         {
-            //쿨타임
-            return;
+            return false;
         }
-        if(m_Status.m_CurMP < m_Skill[idx].useMP)
+        if (m_AttackCTS != null)
         {
-            //엠피부족
-            return;
+            m_AttackCTS.Dispose();
         }
-
-        UseSkill(idx);
+        m_AttackCTS = new CancellationTokenSource();
+        BaseAttack(m_AttackCTS).Forget();
+        return true;
     }
-    void UseSkill(int idx)
-    {        
-        m_SkillCoolTime[idx] = m_Skill[idx].coolTime;
-        m_SkillToken = new CancellationTokenSource();
-        QSkill(m_SkillToken).Forget();
-    }
-
     [SerializeField] float BaseAttack_PreDelay;
     async UniTaskVoid BaseAttack(CancellationTokenSource ct)
     {
+        m_IsAttack = true;
         float preDelay = BaseAttack_PreDelay;
         float curTime = 0;
         Vector2 dir = (m_AttackTarget.transform.position - transform.position).VT2XZ().normalized;
@@ -99,12 +94,51 @@ public class Vanya : Character
                 vanyaAttack.Setting(this, m_AttackTarget, in m_AttackSkill);
             }
         }
-        else
-        {
-            Debug.Log("타겟없음");
-        }
+
+        m_IsAttack = false;
     }
 
+    protected override bool TryUseSkill(KeyCode key)
+    {
+        int idx = -1;
+        if (key == KeyCode.Q)
+        {
+            idx = 0;
+        }
+        if (idx == -1)
+        {
+            return false;
+        }
+        if (m_SkillCoolTime[idx] > 0)
+        {
+            //쿨타임
+            return false;
+        }
+        if (m_Status.m_CurMP < m_Skill[idx].useMP)
+        {
+            //엠피부족
+            return false;
+        }
+        if (m_IsSkill)
+        {
+            //다른 행동중
+            return false;
+        }
+        if(m_IsAttack)
+        {
+            CancelAttack();
+        }
+
+        m_SkillCoolTime[idx] = m_Skill[idx].coolTime;
+        if (m_SkillCTS != null)
+        {
+            m_SkillCTS.Dispose();
+        }
+        m_SkillCTS = new CancellationTokenSource();
+        QSkill(m_SkillCTS).Forget();
+        return true;
+    }
+   
     [SerializeField] float QSkill_PreDelay;
     void QSkillReturn2Vanya()
     {
@@ -112,6 +146,7 @@ public class Vanya : Character
     }
     async UniTaskVoid QSkill(CancellationTokenSource ct)
     {
+        m_IsSkill = true;
         float preDelay = QSkill_PreDelay;
         float curTime = 0;
         Vector2 dir = PlayerInput.Ins.GetSkillDirVT2(transform.position);
@@ -128,26 +163,29 @@ public class Vanya : Character
         }
         Vanya_Q vanyaQ = Instantiate(m_VanyaQPrefab, m_VanyaQStartPos.position, Quaternion.identity);
         vanyaQ.Setting(this, dir, m_VanyaQStartPos.localPosition.y, in m_QSkill, QSkillReturn2Vanya);
-
+        m_IsSkill = false;
 
     }
-
-
+    public override void CancelAttack()
+    {
+        if (m_IsAttack)
+        {
+            m_AttackCTS.Cancel();
+            m_IsAttack = false;
+        }
+    }
+    public override void CancelSkill()
+    {
+        if (m_IsSkill)
+        {
+            m_SkillCTS.Cancel();
+            m_IsSkill = false;
+        }
+    }
     public override float GetAttackRange()
     {
         return m_AttackRange;
     }
-    protected override void TryUseSkill(KeyCode key)
-    {
-        if (key == KeyCode.Q)
-        {
-            TryUseSkill(0);
-        }
-    }
-    protected override void Attack()
-    {
-        m_SkillToken = new CancellationTokenSource();
-        BaseAttack(m_SkillToken).Forget();
-    }
+
 
 }

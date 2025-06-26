@@ -36,7 +36,6 @@ public class Status : MonoBehaviour
     [SerializeField] float Defense = 5f;
     [SerializeField] float MoveSpeed = 5f;
     [SerializeField] float AttackSpeed = 1f;
-
     // 프로퍼티들
     bool m_Death;
     public float m_MaxHP { get; private set; }
@@ -70,7 +69,7 @@ public class Status : MonoBehaviour
 
     private void Update()
     {
-        if(m_Death)
+        if (m_Death)
         {
             return;
         }
@@ -141,7 +140,6 @@ public class Status : MonoBehaviour
     // 데미지를 받는 메서드
     public void TakeDamage(in SkillInfo skillinfo)
     {
-        //Debug.Log($"뎀지받음 {transform.name} {skillinfo.damage} {skillinfo.knockbackDis}");
         if (m_Death) return;
 
         // 방어력에 의한 데미지 감소 계산

@@ -12,6 +12,7 @@ using System.Threading;
 
 //다른 스킬들은 사용자 입력에 시전시도를 함
 
+//기본공격은 이동으로 취소되지만 스킬은 이동으로 취소 
 public class Vanya : Character
 {
     [SerializeField] float m_AttackRange;
@@ -68,18 +69,14 @@ public class Vanya : Character
     {        
         m_SkillCoolTime[idx] = m_Skill[idx].coolTime;
         m_SkillToken = new CancellationTokenSource();
-        QSkill(m_SkillToken.Token).Forget();
+        QSkill(m_SkillToken).Forget();
     }
 
     [SerializeField] float BaseAttack_PreDelay;
-    async UniTask BaseAttack(CancellationToken ct)
+    async UniTaskVoid BaseAttack(CancellationTokenSource ct)
     {
         float preDelay = BaseAttack_PreDelay;
         float curTime = 0;
-        if(m_AttackTarget == null)
-        {
-            Debug.Log("없는디어캐됨");
-        }
         Vector2 dir = (m_AttackTarget.transform.position - transform.position).VT2XZ().normalized;
         await RotToDir(dir, ct);
         while (curTime < preDelay)
@@ -113,7 +110,7 @@ public class Vanya : Character
     {
 
     }
-    async UniTask QSkill(CancellationToken ct)
+    async UniTaskVoid QSkill(CancellationTokenSource ct)
     {
         float preDelay = QSkill_PreDelay;
         float curTime = 0;
@@ -150,7 +147,7 @@ public class Vanya : Character
     protected override void Attack()
     {
         m_SkillToken = new CancellationTokenSource();
-        BaseAttack(m_SkillToken.Token).Forget();
+        BaseAttack(m_SkillToken).Forget();
     }
 
 }

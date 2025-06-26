@@ -41,7 +41,6 @@ GameObject:
   m_Component:
   - component: {fileID: 8157081548456333473}
   - component: {fileID: 8479841574036764415}
-  - component: {fileID: 3126536441016326790}
   - component: {fileID: 9090540953494666465}
   - component: {fileID: 7739293283773319804}
   - component: {fileID: 1279092576108895878}
@@ -84,19 +83,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e7ee62a634f87464f9f3cb8dd021153a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &3126536441016326790
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8879304605106362664}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 31279813e664ebb4a8644e5045bd82e2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_MouseGroundPos: {x: 0, y: 0, z: 0}
 --- !u!114 &9090540953494666465
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -194,10 +180,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce10d06e07fd2da4f98954b8d6e27e94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MaxHP: 100
-  MaxMP: 50
-  AttackDamage: 10
-  SkillDamage: 10
+  MaxHP: 3200
+  MaxMP: 1200
+  AttackDamage: 200
+  SkillDamage: 100
   Defense: 5
   MoveSpeed: 5
   AttackSpeed: 1
@@ -213,13 +199,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c865201a0655624db623a5c4469f2e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_VanyaQPrefab: {fileID: 0}
+  m_AttackRange: 6
+  m_VanyaAttackPrefab: {fileID: 5649009726109891830, guid: 070177890223f5a4cbad5c6085f638ac, type: 3}
+  m_VanyaQPrefab: {fileID: 3573669729248203113, guid: 6f243a16f4d67d049bce01436c82f533, type: 3}
   m_VanyaQStartPos: {fileID: 945007515338752253}
-  m_QSkill:
-    coolTime: 1
+  m_AttackSkill:
+    coolTime: 0
     useMP: 0
     dmg:
       damage: 1
+      knockbackType: 0
+      knockbackDis: 0
+      stunTime: 0
+  m_QSkill:
+    coolTime: 5
+    useMP: 0
+    dmg:
+      damage: 2
       knockbackType: 0
       knockbackDis: 0
       stunTime: 0
@@ -247,7 +243,8 @@ MonoBehaviour:
       knockbackType: 0
       knockbackDis: 0
       stunTime: 0
-  QSkill_PreDelay: 0.2
+  BaseAttack_PreDelay: 2
+  QSkill_PreDelay: 2
 --- !u!1001 &6736548421898026665
 PrefabInstance:
   m_ObjectHideFlags: 0

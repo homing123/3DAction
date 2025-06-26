@@ -36,6 +36,7 @@ public class Bio : MonoBehaviour
     {
         m_Status.OnDeath += Death;
         m_Status.OnStateChanged += StateChanged;
+        UI_HPBar.Create(this);
     }
     protected virtual void Update()
     {
@@ -80,7 +81,7 @@ public class Bio : MonoBehaviour
         }
 
         knockbackDir.y = 0;
-        SkillInfo skillHitInfo = new SkillInfo(this, in dmgInfo, knockbackDir.normalized);
+        SkillInfo skillHitInfo = new SkillInfo(user, in dmgInfo, knockbackDir.normalized);
         m_Status.TakeDamage(skillHitInfo);
     }
 
@@ -88,11 +89,11 @@ public class Bio : MonoBehaviour
     {
         m_Status.EndSkillCasting();
     }
-    protected async UniTask RotToDir(Vector2 dir, CancellationToken ct)
+    protected async UniTask RotToDir(Vector2 dir, CancellationTokenSource cts)
     {
         while (true)
         {
-            if (ct.IsCancellationRequested)
+            if (cts.Token.IsCancellationRequested)
             {
                 return;
             }
@@ -117,7 +118,10 @@ public class Bio : MonoBehaviour
     {
         return transform.position + Vector3.up * 1.2f;
     }
-
+    public virtual Vector3 GetUIPivotPos()
+    {
+        return transform.position + Vector3.up * 1.8f;
+    }
     public void UpdateAngular(Vector2 dir, out bool arrived)
     {
         Vector3 moveDirHor = new Vector3(dir.x, 0, dir.y);

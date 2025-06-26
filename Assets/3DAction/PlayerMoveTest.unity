@@ -313,12 +313,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1920, y: 1080}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 1
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -383,6 +383,10 @@ PrefabInstance:
     - target: {fileID: 99505811110919993, guid: ac77e69f279d85e479ad8167c8379161, type: 3}
       propertyPath: m_Name
       value: Sandbag (1)
+      objectReference: {fileID: 0}
+    - target: {fileID: 99505811110919993, guid: ac77e69f279d85e479ad8167c8379161, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8948429181669426214, guid: ac77e69f279d85e479ad8167c8379161, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1958,6 +1962,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Sandbag (2)
       objectReference: {fileID: 0}
+    - target: {fileID: 99505811110919993, guid: ac77e69f279d85e479ad8167c8379161, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8948429181669426214, guid: ac77e69f279d85e479ad8167c8379161, type: 3}
       propertyPath: m_LocalPosition.x
       value: 2.9
@@ -2003,6 +2011,41 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: ac77e69f279d85e479ad8167c8379161, type: 3}
+--- !u!1 &2117754254 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8495504420675570087, guid: 74586bf29d3332c48a9be9afef3a4fd4, type: 3}
+  m_PrefabInstance: {fileID: 4401585499298017981}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2117754257
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2117754254}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31c4fb16aaa25444f8aa7ef020324700, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  UI_Parent: {fileID: 122443538}
+  HPBar: {fileID: 6783599448930129521, guid: e4201720f0270454587904388a15a355, type: 3}
+  HitRange_Box: {fileID: 0}
+  HitRange_Sphere: {fileID: 0}
+  VFX_Slash: {fileID: 0}
+  Proj_Rock: {fileID: 0}
+--- !u!114 &2117754258
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2117754254}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9d0dd43a2b2f8647831474c1f349bb3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &100281854270977025
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2128,10 +2171,17 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: -6118869444555301875, guid: 74586bf29d3332c48a9be9afef3a4fd4, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8495504420675570087, guid: 74586bf29d3332c48a9be9afef3a4fd4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2117754258}
+    - targetCorrespondingSourceObject: {fileID: 8495504420675570087, guid: 74586bf29d3332c48a9be9afef3a4fd4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2117754257}
   m_SourcePrefab: {fileID: 100100000, guid: 74586bf29d3332c48a9be9afef3a4fd4, type: 3}
 --- !u!1001 &6613626356921482842
 PrefabInstance:
@@ -2238,21 +2288,13 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 5435345041946134777, guid: f7a587b5ffb92ce43b1c694b8f64a8ba, type: 3}
-      propertyPath: m_AttackRange
-      value: 6
+    - target: {fileID: 2790643954275719899, guid: f7a587b5ffb92ce43b1c694b8f64a8ba, type: 3}
+      propertyPath: AttackSpeed
+      value: 3
       objectReference: {fileID: 0}
-    - target: {fileID: 5435345041946134777, guid: f7a587b5ffb92ce43b1c694b8f64a8ba, type: 3}
-      propertyPath: m_VanyaQPrefab
-      value: 
-      objectReference: {fileID: 3573669729248203113, guid: 6f243a16f4d67d049bce01436c82f533, type: 3}
-    - target: {fileID: 5435345041946134777, guid: f7a587b5ffb92ce43b1c694b8f64a8ba, type: 3}
-      propertyPath: m_VanyaAttackPrefab
-      value: 
-      objectReference: {fileID: 5649009726109891830, guid: 070177890223f5a4cbad5c6085f638ac, type: 3}
-    - target: {fileID: 5435345041946134777, guid: f7a587b5ffb92ce43b1c694b8f64a8ba, type: 3}
-      propertyPath: m_AttackSkill.dmg.damage
-      value: 1
+    - target: {fileID: 2790643954275719899, guid: f7a587b5ffb92ce43b1c694b8f64a8ba, type: 3}
+      propertyPath: AttackDamage
+      value: 50
       objectReference: {fileID: 0}
     - target: {fileID: 8157081548456333473, guid: f7a587b5ffb92ce43b1c694b8f64a8ba, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2302,8 +2344,7 @@ PrefabInstance:
       propertyPath: m_MoveDestiObj
       value: 
       objectReference: {fileID: 656064496}
-    m_RemovedComponents:
-    - {fileID: 3126536441016326790, guid: f7a587b5ffb92ce43b1c694b8f64a8ba, type: 3}
+    m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []

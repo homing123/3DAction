@@ -6,6 +6,7 @@ public class ResM : SingleM<ResM>
 
     //UI
     [Header("UI")]
+    public UI_HPBar HPBar;
 
     //Not UI
     [Header("Obj")]

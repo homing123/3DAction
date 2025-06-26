@@ -2,6 +2,8 @@ using UnityEngine;
 
 public class Sandbag : Bio
 {
+    [SerializeField] bool m_IsHeal;
+
     protected override void Awake()
     {
         base.Awake();
@@ -10,6 +12,9 @@ public class Sandbag : Bio
     protected override void Update()
     {
         base.Update();
-        m_Status.Heal(m_Status.m_MaxHP);
+        if (m_IsHeal)
+        {
+            m_Status.Heal(m_Status.m_MaxHP);
+        }
     }
 }

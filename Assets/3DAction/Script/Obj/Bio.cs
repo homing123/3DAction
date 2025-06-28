@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using System.Threading;
+using Unity.VisualScripting.Antlr3.Runtime;
 public enum Skill_Target_Type
 {
     Monster = 1 << 0,
@@ -15,6 +16,7 @@ public enum Bio_Type
 {
     Animal,
     Character,
+    Sandbag,
 }
 
 [RequireComponent (typeof(Status))]
@@ -146,7 +148,34 @@ public class Bio : MonoBehaviour
         }
     }
 
+    public static bool IsHit(Bio user, Bio target, Skill_Target_Type type)
+    {
+        if(target.m_BioType == Bio_Type.Sandbag)
+        {
+            return true;
+        }
+        if((type & Skill_Target_Type.Monster) > 0 && target.m_BioType == Bio_Type.Animal)
+        {
+            return true;
+        }
+        if((type & Skill_Target_Type.Character) > 0 && target.m_BioType == Bio_Type.Character)
+        {
+            return true;
+        }
+        if (user.m_BioType == Bio_Type.Character && target.m_BioType == Bio_Type.Character)
+        {
+            Character userCha = user as Character;
+            Character targetCha = target as Character;
+            if ((type & Skill_Target_Type.Enemy) > 0 && userCha.m_TeamID != targetCha.m_TeamID)
+            {
+                return true;
+            }
+            if ((type & Skill_Target_Type.Team) > 0 && userCha.m_TeamID == targetCha.m_TeamID)
+            {
+                return true;
+            }
+        }
+        return false;
 
-
-
+    }
 }

@@ -1,6 +1,8 @@
 using UnityEngine;
 using Cysharp.Threading.Tasks;
 using System.Threading;
+using Cysharp.Threading.Tasks.CompilerServices;
+using System;
 //캐릭터 스킬
 //기본공격
 //Q,W,E,R
@@ -19,10 +21,6 @@ public class Vanya : Character
     [SerializeField] Vanya_Q m_VanyaQPrefab;
     [SerializeField] Transform m_VanyaQStartPos;
 
-    [SerializeField] float m_AttackRange;
-    [SerializeField] Skill m_AttackSkill;
-    [SerializeField] Skill m_QSkill;
-    [SerializeField] Skill m_WSkill;
     [SerializeField] Skill m_ESkill;
     [SerializeField] Skill m_RSkill;
 
@@ -38,7 +36,7 @@ public class Vanya : Character
         base.Start();
         m_Skill = new Skill[7];
         m_Skill[0] = m_QSkill;
-        m_Skill[1] = m_WSkill;
+        m_Skill[1] = m_WBasicSkill;
         m_Skill[2] = m_ESkill;
         m_Skill[3] = m_RSkill;
         m_SkillCoolTime = new float[7];
@@ -52,6 +50,13 @@ public class Vanya : Character
             m_SkillCoolTime[i] = m_SkillCoolTime[i] > 0 ? m_SkillCoolTime[i] - Time.deltaTime : m_SkillCoolTime[i];
         }
     }
+
+    #region Attack
+    [Header("Attack")]
+    [SerializeField] float m_AttackRange;
+    [SerializeField] Skill m_AttackSkill;
+    [SerializeField] float m_AttackPreDelay;
+
     protected override bool TryAttack()
     {
         if (m_IsSkill || m_IsAttack)
@@ -66,23 +71,19 @@ public class Vanya : Character
         BaseAttack(m_AttackCTS).Forget();
         return true;
     }
-    [SerializeField] float BaseAttack_PreDelay;
-    async UniTaskVoid BaseAttack(CancellationTokenSource ct)
+    async UniTaskVoid BaseAttack(CancellationTokenSource cts)
     {
         m_IsAttack = true;
-        float preDelay = BaseAttack_PreDelay;
-        float curTime = 0;
         Vector2 dir = (m_AttackTarget.transform.position - transform.position).VT2XZ().normalized;
-        await RotToDir(dir, ct);
-        while (curTime < preDelay)
+        await RotToDir(dir, cts);
+        if (cts.IsCancellationRequested)
         {
-            if (ct.IsCancellationRequested)
-            {
-                return;
-            }
-            await UniTask.Yield();
-
-            curTime += Time.deltaTime;
+            return;
+        }
+        await Util.WaitDelay(m_AttackPreDelay, cts);
+        if (cts.IsCancellationRequested)
+        {
+            return;
         }
 
         if (m_AttackTarget != null)
@@ -97,13 +98,67 @@ public class Vanya : Character
 
         m_IsAttack = false;
     }
-
+    public override void CancelAttack()
+    {
+        if (m_IsAttack)
+        {
+            m_AttackCTS.Cancel();
+            m_IsAttack = false;
+        }
+    }
+    public override float GetAttackRange()
+    {
+        return m_AttackRange;
+    }
+    #endregion
+    #region Skill
     protected override bool TryUseSkill(KeyCode key)
     {
         int idx = -1;
-        if (key == KeyCode.Q)
+        Action skillUnitask = null;
+        switch (key)
         {
-            idx = 0;
+            case KeyCode.Q:
+                idx = 0;
+                skillUnitask = () =>
+                {
+                    QSkill(m_SkillCTS).Forget();
+                };
+                break;
+            case KeyCode.W:
+                idx = 1;
+                if (m_WBasicCasting)
+                {
+                    m_WBasicCasting = false;
+                    CancelSkill();
+                    if (m_SkillCTS != null)
+                    {
+                        m_SkillCTS.Dispose();
+                    }
+                    m_SkillCTS = new CancellationTokenSource();
+                    WSecondSkill(m_SkillCTS).Forget();
+                    m_SkillCoolTime[idx] = m_WSecondSkill.coolTime;
+                    return true;
+                }
+                skillUnitask = () =>
+                {
+                    WBasicSkill(m_SkillCTS).Forget();
+                };
+                break;
+            case KeyCode.E:
+                idx = 2;
+                break;
+            case KeyCode.R:
+                idx = 3;
+                break;
+            case KeyCode.D:
+                idx = 4;
+                break;
+            case KeyCode.F:
+                idx = 5;
+                break;
+            default:
+                return false;
         }
         if (idx == -1)
         {
@@ -135,45 +190,107 @@ public class Vanya : Character
             m_SkillCTS.Dispose();
         }
         m_SkillCTS = new CancellationTokenSource();
-        QSkill(m_SkillCTS).Forget();
+        skillUnitask();
         return true;
     }
-   
-    [SerializeField] float QSkill_PreDelay;
+    #region QSkill
+    [Header("QSkill")]
+    [SerializeField] Skill m_QSkill;
+    [SerializeField] float m_QSkillPreDelay;
     void QSkillReturn2Vanya()
     {
 
     }
-    async UniTaskVoid QSkill(CancellationTokenSource ct)
+    async UniTaskVoid QSkill(CancellationTokenSource cts)
     {
         m_IsSkill = true;
-        float preDelay = QSkill_PreDelay;
-        float curTime = 0;
         Vector2 dir = PlayerInput.Ins.GetSkillDirVT2(transform.position);
-        await RotToDir(dir, ct);
-        while (curTime < preDelay)
+        await RotToDir(dir, cts);
+        if (cts.IsCancellationRequested)
         {
-            if(ct.IsCancellationRequested)
-            {
-                return;
-            }
-            await UniTask.Yield();
-
-            curTime += Time.deltaTime;
+            return;
+        }
+        await Util.WaitDelay(m_QSkillPreDelay, cts);
+        if (cts.IsCancellationRequested)
+        {
+            return;
         }
         Vanya_Q vanyaQ = Instantiate(m_VanyaQPrefab, m_VanyaQStartPos.position, Quaternion.identity);
         vanyaQ.Setting(this, dir, m_VanyaQStartPos.localPosition.y, in m_QSkill, QSkillReturn2Vanya);
         m_IsSkill = false;
 
     }
-    public override void CancelAttack()
+    #endregion
+    #region WSkill
+    [Header("WSkill")]
+    [SerializeField] float m_WSkillPreDelay = 0.1f;
+    [SerializeField] float m_WSkillRadius = 3;
+    [SerializeField] Skill m_WBasicSkill;
+    [SerializeField] float m_WBasicLoopDelay; //w스킬 사이의 반복 딜레이
+    bool m_WBasicCasting;
+    const int WBasicLoopCount = 5;
+
+    [SerializeField] Skill m_WSecondSkill;
+    [SerializeField] float m_WSecondAnimTime;
+    void WSkillHit(in DamageInfo dmginfo)
     {
-        if (m_IsAttack)
+        Collider[] hits = Physics.OverlapSphere(transform.position, m_WSkillRadius, Define.D_LayerMask[Layer.Character] | Define.D_LayerMask[Layer.Monster]);
+
+        for (int i = 0; i < hits.Length; i++)
         {
-            m_AttackCTS.Cancel();
-            m_IsAttack = false;
+            Bio hitBio = hits[i].GetComponent<Bio>();
+            if (Bio.IsHit(this, hitBio, Skill_Target_Type.Enemy | Skill_Target_Type.Monster))
+            {
+                hitBio.GetAttacked(this, in dmginfo, default);
+            }
         }
     }
+    async UniTaskVoid WBasicSkill(CancellationTokenSource cts)
+    {
+        Debug.Log("WBasicStart");
+
+        m_IsSkill = true;
+        await Util.WaitDelay(m_WSkillPreDelay, cts);
+        if(cts.IsCancellationRequested)
+        {
+            return;
+        }
+        m_WBasicCasting = true;
+        //이속증가
+        for (int i = 0; i < WBasicLoopCount; i++)
+        {
+            WSkillHit(in m_WBasicSkill.dmg);
+            if(i== WBasicLoopCount - 1)
+            {
+                break;
+            }
+            await Util.WaitDelay(m_WBasicLoopDelay, cts);
+            if (cts.IsCancellationRequested)
+            {
+                return;
+            }
+        }
+        m_WBasicCasting = false;
+        m_IsSkill = false;
+        Debug.Log("WBasicEnd");
+    }
+
+    async UniTaskVoid WSecondSkill(CancellationTokenSource cts)
+    {
+        Debug.Log("WSecondStart");
+
+        m_IsSkill = true;
+        //이동불가
+        //목표지정불가
+        await Util.WaitDelay(m_WBasicLoopDelay, cts);
+        if (cts.IsCancellationRequested)
+        {
+            return;
+        }
+        WSkillHit(in m_WSecondSkill.dmg);
+        Debug.Log("WSecondEnd");
+    }
+    #endregion
     public override void CancelSkill()
     {
         if (m_IsSkill)
@@ -182,10 +299,5 @@ public class Vanya : Character
             m_IsSkill = false;
         }
     }
-    public override float GetAttackRange()
-    {
-        return m_AttackRange;
-    }
-
-
+    #endregion
 }

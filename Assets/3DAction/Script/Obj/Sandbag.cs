@@ -7,7 +7,7 @@ public class Sandbag : Bio
     protected override void Awake()
     {
         base.Awake();
-        m_BioType = Bio_Type.Character;
+        m_BioType = Bio_Type.Sandbag;
     }
     protected override void Update()
     {

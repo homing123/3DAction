@@ -1,3 +1,5 @@
+using Cysharp.Threading.Tasks;
+using System.Threading;
 using UnityEngine;
 
 public class Util
@@ -104,6 +106,24 @@ public class Util
 
         Vector3 worldNormal = box.transform.TransformDirection(localNormal).normalized;
         return worldNormal;
+    }
+
+    public static async UniTask WaitDelay(float delay, CancellationTokenSource cts)
+    {
+        float curTime = 0;
+        if (delay < 0)
+        {
+            return;
+        }
+        while (curTime < delay)
+        {
+            if (cts.IsCancellationRequested)
+            {
+                return;
+            }
+            await UniTask.Yield();
+            curTime += Time.deltaTime;
+        }
     }
 }
 public static class UtilEX

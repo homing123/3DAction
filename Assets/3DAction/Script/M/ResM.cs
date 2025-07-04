@@ -10,8 +10,8 @@ public class ResM : SingleM<ResM>
 
     //Not UI
     [Header("Obj")]
-    public HitRange HitRange_Box;
-    public HitRange HitRange_Sphere;
+    public HitRange HitRange_Quad;
+    public HitRange HitRange_Circle;
 
     [Header("VFX")]
     public VFX VFX_Slash;

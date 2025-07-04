@@ -232,11 +232,10 @@ public class Vanya : Character
 
     [SerializeField] Skill m_WSecondSkill;
     [SerializeField] float m_WSecondAnimTime;
-    void WSkillHit(in DamageInfo dmginfo)
+    void WSkillHit(in HitRangeInfo hitRangeInfo, in DamageInfo dmginfo)
     {
-        Collider[] hits = Physics.OverlapSphere(transform.position, m_WSkillRadius, Define.D_LayerMask[Layer.Character] | Define.D_LayerMask[Layer.Monster]);
-
-        for (int i = 0; i < hits.Length; i++)
+        Collider[] hits = HitRange.Overlap(in hitRangeInfo, out int count);
+        for(int i=0;i<count;i++)
         {
             Bio hitBio = hits[i].GetComponent<Bio>();
             if (Bio.IsHit(this, hitBio, Skill_Target_Type.Enemy | Skill_Target_Type.Monster))
@@ -259,7 +258,11 @@ public class Vanya : Character
         //이속증가
         for (int i = 0; i < WBasicLoopCount; i++)
         {
-            WSkillHit(in m_WBasicSkill.dmg);
+            HitRangeInfo hitRangeInfo = new HitRangeInfo();
+            hitRangeInfo.SetCircleFollowTarget(transform, m_WSkillRadius, m_WBasicLoopDelay);
+            HitRange.Create(in hitRangeInfo);
+
+            WSkillHit(in hitRangeInfo, in m_WBasicSkill.dmg);
             if(i== WBasicLoopCount - 1)
             {
                 break;
@@ -282,12 +285,15 @@ public class Vanya : Character
         m_IsSkill = true;
         //이동불가
         //목표지정불가
-        await Util.WaitDelay(m_WBasicLoopDelay, cts);
+        HitRangeInfo hitRangeInfo = new HitRangeInfo();
+        hitRangeInfo.SetCircleFollowTarget(transform, m_WSkillRadius, m_WSecondAnimTime);
+        HitRange.Create(in hitRangeInfo);
+        await Util.WaitDelay(m_WSecondAnimTime, cts);
         if (cts.IsCancellationRequested)
         {
             return;
         }
-        WSkillHit(in m_WSecondSkill.dmg);
+        WSkillHit(in hitRangeInfo, in m_WSecondSkill.dmg);
         Debug.Log("WSecondEnd");
     }
     #endregion

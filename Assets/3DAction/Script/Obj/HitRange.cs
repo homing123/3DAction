@@ -1,6 +1,4 @@
-using System.Drawing;
 using UnityEngine;
-using static UnityEditor.PlayerSettings;
 
 public enum HitRangeType
 {
@@ -82,7 +80,7 @@ public class HitRange : MonoBehaviour
                 {
                     HitRange hitRange = Instantiate(ResM.Ins.HitRange_Circle).GetComponent<HitRange>();
                     hitRange.transform.position = info.pos;
-                    hitRange.transform.localScale = new Vector3(info.circleRadius * 2, hitRange.transform.localScale.y, info.circleRadius * 2);
+                    hitRange.transform.localScale = new Vector3(info.circleRadius * 2, info.circleRadius * 2, info.circleRadius * 2);
                     hitRange.m_Info = info;
                 }
                 break;
@@ -91,22 +89,31 @@ public class HitRange : MonoBehaviour
     }
     HitRangeInfo m_Info;
     float m_CurTime;
-    [SerializeField] Material m_Mat;
     MaterialPropertyBlock m_MPB;
+    [SerializeField] MeshRenderer m_MeshRenderer;
 
+    const string PropertyColor = "_Color";
+    const string PropertyProgress = "_Progress";
     private void Start()
     {
         SetPos();
         m_MPB = new MaterialPropertyBlock();
+        m_MPB.SetColor(PropertyColor, Color.red);
+        m_MPB.SetFloat(PropertyProgress, 0);
+        m_MeshRenderer.SetPropertyBlock(m_MPB);
     }
     private void Update()
     {
         SetPos();
-        m_CurTime -= Time.deltaTime;
-        if(m_CurTime < 0)
+        m_CurTime += Time.deltaTime;
+        m_MPB.SetFloat(PropertyProgress, m_CurTime / m_Info.time);
+        if (m_CurTime >= m_Info.time)
         {
+            m_MPB.SetFloat(PropertyProgress, 1);
             Destroy(this.gameObject);
         }
+        m_MeshRenderer.SetPropertyBlock(m_MPB);
+
     }
     void SetPos()
     {

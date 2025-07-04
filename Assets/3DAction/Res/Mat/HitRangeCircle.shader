@@ -3,6 +3,10 @@ Shader "Unlit/HitRangeCircle"
     Properties
     {
         _MainTex("Texture", 2D) = "white" {}
+        _ProgressAlpha("ProgressAlpha", Range(0,1)) = 0.5
+        _BGAlpha("BGAlpha", Range(0,1)) = 0.5
+        _Color("Color", Color) = (1,1,1,1)
+        _Progress("Progress", Range(0,1)) = 0
     }
     SubShader
     {
@@ -40,10 +44,12 @@ Shader "Unlit/HitRangeCircle"
             sampler2D _MainTex;
             CBUFFER_START(UnityPerMaterial)
             float4 _MainTex_ST;
-            float  _Progress;
-            float3 _Color;
+            float _BGAlpha;
+            float _ProgressAlpha;
             CBUFFER_END
-           
+            float _Progress;
+            float4 _Color;
+            
             v2f vert (appdata v)
             {
                 v2f o;
@@ -54,8 +60,13 @@ Shader "Unlit/HitRangeCircle"
 
             half4 frag (v2f i) : SV_Target
             {
-                half4 col = tex2D(_MainTex, i.uv);
-                clip(col.a - 0.1f);
+                half alpha = tex2D(_MainTex, i.uv).a;
+                clip(alpha - 0.1f);      
+                half4 col = half4(_Color.rgb, 0);
+                float2 center = float2(0.5f, 0.5f);
+                float dis = length(center - i.uv);
+                
+                col.a = dis < _Progress * 0.5f ? _ProgressAlpha : _BGAlpha;
                 return col;
             }
             ENDHLSL

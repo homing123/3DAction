@@ -18,6 +18,7 @@ public enum CharacterAction
 }
 public abstract class Character : Bio
 {
+    public static Character PlayerCharacter;
     const float AttackDestiSearchRange = 8;
     protected CharacterMove m_Move;
 
@@ -33,6 +34,8 @@ public abstract class Character : Bio
     protected override void Awake()
     {
         base.Awake();
+        Debug.Log("플레이어넣음");
+        PlayerCharacter = this;
         m_BioType = Bio_Type.Character;
         m_Move = GetComponent<CharacterMove>();
         m_CharacterAction = CharacterAction.Stop;

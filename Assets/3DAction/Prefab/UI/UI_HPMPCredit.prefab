@@ -65,11 +65,11 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: af2714d7fb11c7340b0f18dc4e45a480, type: 3}
+  m_Type: 3
   m_PreserveAspect: 0
   m_FillCenter: 1
-  m_FillMethod: 4
+  m_FillMethod: 0
   m_FillAmount: 1
   m_FillClockwise: 1
   m_FillOrigin: 0
@@ -222,6 +222,7 @@ GameObject:
   - component: {fileID: 8384634841862621690}
   - component: {fileID: 7404784984419715571}
   - component: {fileID: 2275936051244138454}
+  - component: {fileID: 3932674258192299105}
   m_Layer: 5
   m_Name: UI_HPMPCredit
   m_TagString: Untagged
@@ -289,6 +290,23 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &3932674258192299105
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2529250827130688776}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 22c50376a3ee8c640a4d2f52ceb27809, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_HPGauge: {fileID: 3096694622338563626}
+  T_HP: {fileID: 4355466333521894619}
+  m_MPGauge: {fileID: 7988132229994598340}
+  T_MP: {fileID: 1050815911834747048}
+  T_Credit: {fileID: 4694716810540227298}
 --- !u!1 &3052507420721826910
 GameObject:
   m_ObjectHideFlags: 0
@@ -484,7 +502,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -702,11 +720,11 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: af2714d7fb11c7340b0f18dc4e45a480, type: 3}
+  m_Type: 3
   m_PreserveAspect: 0
   m_FillCenter: 1
-  m_FillMethod: 4
+  m_FillMethod: 0
   m_FillAmount: 1
   m_FillClockwise: 1
   m_FillOrigin: 0

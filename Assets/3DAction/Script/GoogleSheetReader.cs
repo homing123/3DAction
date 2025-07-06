@@ -1,6 +1,8 @@
 using Cysharp.Threading.Tasks;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using UnityEngine;
@@ -38,7 +40,7 @@ public class GoogleSheetReader : MonoBehaviour
     {
         ReadBinary();
     }
-    string EditURL(GoogleSheetInfo info)
+    static string EditURL(GoogleSheetInfo info)
     {
         string[] splitSlash = info.URL.Split("/");
         string[] splitfragment = splitSlash[splitSlash.Length - 1].Split("#");
@@ -61,7 +63,7 @@ public class GoogleSheetReader : MonoBehaviour
         builder.Append(gid);
         return builder.ToString();
     }
-    public async void ReadURL(string url)
+    public static async void ReadURL(string url)
     {
         using (UnityWebRequest request = UnityWebRequest.Get(url))
         {
@@ -70,8 +72,12 @@ public class GoogleSheetReader : MonoBehaviour
             {
                 case UnityWebRequest.Result.Success:
                     Debug.Log($"성공 : {request.downloadHandler.text}");
-                    TSVReader(request.downloadHandler.text);
+                    TextData[] instancese = TSV2InstanceArray<TextData>(request.downloadHandler.text);
 
+                    for(int i=0;i< instancese.Length;i++)
+                    {
+                        Debug.Log($"{instancese[i].ID}, {instancese[i].KOR}, {instancese[i].ENG}");
+                    }
                     break;
                 default:
                     Debug.Log($"URL : {url}\n 실패 : {request.result}");
@@ -81,7 +87,33 @@ public class GoogleSheetReader : MonoBehaviour
         }
     }
 
-    public void TSVReader(string data)
+    public static T[] TSV2InstanceArray<T>(string data) where T : new()
+    {
+        string[] line = data.Split('\n');
+        int dataCount = line.Length - 1;
+        string[] headersName = line[0].Split('\t');
+
+        FieldInfo[] fieldInfose = new FieldInfo[headersName.Length];
+        Type type = typeof(T);
+        for(int i=0;i<headersName.Length;i++)
+        {
+            fieldInfose[i] = type.GetField(headersName[i].Trim(), BindingFlags.Public | BindingFlags.Instance);
+        }
+        T[] textDatas = new T[dataCount];
+
+        for (int i = 0; i < line.Length - 1; i++)
+        {
+            string[] datas = line[i + 1].Split('\t');
+            textDatas[i] = new T();
+            for (int j = 0; j < fieldInfose.Length; j++)
+            {
+                object convertedValue = Convert.ChangeType(datas[j], fieldInfose[j].FieldType);
+                fieldInfose[j].SetValue(textDatas[i], convertedValue);
+            }
+        }
+        return textDatas;
+    }
+    public void TSV2Binary(string data)
     {
         string[] line = data.Split('\n');
         int dataCount = line.Length - 1;

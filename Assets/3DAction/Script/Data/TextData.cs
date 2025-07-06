@@ -12,6 +12,9 @@ public enum LanguageKind
 }
 public class TextData
 {
+    public int ID;
+    public string KOR;
+    public string ENG;
     //public const string FileName = "Text";
 
     //public static Dictionary<int, string> D_Data;

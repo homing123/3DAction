@@ -150,9 +150,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_SheetInfo:
   - URL: https://docs.google.com/spreadsheets/d/16g04AMh2YydjKwtZsKuhJb0_EqDqz1efA8vg0DIYr4g/edit?gid=1637670913#gid=1637670913
-    RowMin: B
+    RowMin: C
     RowMax: E
-    ColumnMax: 2
+    ColumnMax: 0
 --- !u!4 &286305080
 Transform:
   m_ObjectHideFlags: 0

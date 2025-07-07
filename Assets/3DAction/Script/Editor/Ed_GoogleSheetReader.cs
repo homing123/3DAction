@@ -1,16 +1,25 @@
 using UnityEngine;
+using UnityEditor;
 
-public class Ed_GoogleSheetReader : MonoBehaviour
+
+[CustomEditor(typeof(GoogleSheetReader))]
+public class Ed_GoogleSheetReader : Editor
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    GoogleSheetReader m_Ins;
+    public async void LoadTextSheet()
     {
-        
+        TextData[] textDatas = await GoogleSheetReader.LoadGoogleSheetAndSaveBinary<TextData>(m_Ins.m_TextSheetInfo);
+        TextData.SetDicData(textDatas);
+        GoogleSheetReader.SaveBinary(TextData.GetDicData(), TextData.FileName);
     }
-
-    // Update is called once per frame
-    void Update()
+    public override void OnInspectorGUI()
     {
-        
+        base.OnInspectorGUI();
+        m_Ins = (GoogleSheetReader)target;
+        if(GUILayout.Button("Load TextData"))
+        {
+            LoadTextSheet();
+        }
+
     }
 }

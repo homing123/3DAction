@@ -7,9 +7,13 @@ public class GM : MonoBehaviour
     {
         Ins = this;
         DontDestroyOnLoad(this.gameObject);
+        StreamingDataLoad();
     }
-    
 
+    void StreamingDataLoad()
+    {
+        TextData.LoadStreamingData();
+    }
 
 
 

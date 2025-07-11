@@ -159,7 +159,7 @@ public class UI_HPBar : MonoBehaviour
     }
     public static void Create(Bio target)
     {
-        UI_HPBar hpBar = Instantiate(ResM.Ins.HPBar, ResM.Ins.UI_Parent.transform);
+        UI_HPBar hpBar = Instantiate(ResM.Ins.HPBar, GM.Canvas.transform);
         hpBar.m_Target = target;
     }
 }

@@ -1,9 +1,8 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class ResM : SingleM<ResM>
 {
-    public GameObject UI_Parent;
-
     //UI
     [Header("UI")]
     public UI_HPBar HPBar;
@@ -19,5 +18,12 @@ public class ResM : SingleM<ResM>
     [Header("Projectile")]
     public Projectile Proj_Rock;
 
-   
+    [System.Serializable]
+    class SpriteAndKey
+    {
+        public int key;
+        public Sprite sprite;
+    }
+
+
 }

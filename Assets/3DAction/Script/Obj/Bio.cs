@@ -66,25 +66,25 @@ public class Bio : MonoBehaviour
     {
 
     }
-    public void GetAttacked(Bio user, in DamageInfo dmgInfo, Vector3 knockbackValue)
+    public void GetAttacked(Bio user, in SkillAttackInfo skillAttackInfo, Vector3 knockbackValue)
     {
         Vector3 knockbackDir = default;
-        switch (dmgInfo.knockbackType)
-        {
-            case Knockback_Type.User2Target:
-                knockbackDir = transform.position - user.transform.position;
-                break;
-            case Knockback_Type.Direction:
-                knockbackDir = knockbackValue;
-                break;
-            case Knockback_Type.Position:
-                knockbackDir = (knockbackValue - transform.position).normalized;
-                break;
-        }
+        //switch (dmgInfo.knockbackType)
+        //{
+        //    case Knockback_Type.User2Target:
+        //        knockbackDir = transform.position - user.transform.position;
+        //        break;
+        //    case Knockback_Type.Direction:
+        //        knockbackDir = knockbackValue;
+        //        break;
+        //    case Knockback_Type.Position:
+        //        knockbackDir = (knockbackValue - transform.position).normalized;
+        //        break;
+        //}
 
         knockbackDir.y = 0;
-        SkillInfo skillHitInfo = new SkillInfo(user, in dmgInfo, knockbackDir.normalized);
-        m_Status.TakeDamage(skillHitInfo);
+        //SkillAttackInfo skillAttackInfo = new SkillAttackInfo(user, skillData);
+        m_Status.TakeDamage(in skillAttackInfo);
     }
 
     protected void SkillEnd()

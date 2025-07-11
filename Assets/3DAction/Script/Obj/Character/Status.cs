@@ -110,17 +110,17 @@ public class Status : MonoBehaviour
         m_State = on ? m_State | state : m_State & (~state);
         OnStateChanged?.Invoke(lastState ^ m_State, m_State);
     }
-    void GetKnockback(in SkillInfo skillInfo)
-    {
-        SetState(State.Knockback, true);
-        m_CurKnockbackTime = KnockbackTime;
-        //m_Bio.SetMoveAnimDir(skillInfo.knockBackDir, skillInfo.knockbackDis, KnockbackTime, KnockbackAcc);
-    }
-    void GetStun(in SkillInfo skillInfo)
-    {
-        SetState(State.Stun, true);
-        m_CurStunTime = skillInfo.stunTime;
-    }
+    //void GetKnockback(in SkillInfo skillInfo)
+    //{
+    //    SetState(State.Knockback, true);
+    //    m_CurKnockbackTime = KnockbackTime;
+    //    //m_Bio.SetMoveAnimDir(skillInfo.knockBackDir, skillInfo.knockbackDis, KnockbackTime, KnockbackAcc);
+    //}
+    //void GetStun(in SkillInfo skillInfo)
+    //{
+    //    SetState(State.Stun, true);
+    //    m_CurStunTime = skillInfo.stunTime;
+    //}
     // 방어력에 따른 데미지 계산
     float CalculateDamageAfterDefense(float originalDamage)
     {
@@ -138,12 +138,12 @@ public class Status : MonoBehaviour
     }
 
     // 데미지를 받는 메서드
-    public void TakeDamage(in SkillInfo skillinfo)
+    public void TakeDamage(in SkillAttackInfo skillAttackInfo)
     {
         if (m_Death) return;
 
         // 방어력에 의한 데미지 감소 계산
-        float reducedDamage = CalculateDamageAfterDefense(skillinfo.damage);
+        float reducedDamage = CalculateDamageAfterDefense(skillAttackInfo.damage);
 
         // 체력 감소
         //UI_Damage.Create(m_Bio, reducedDamage);
@@ -162,14 +162,14 @@ public class Status : MonoBehaviour
         else
         {
             //안죽은 경우 상태 처리
-            if (skillinfo.knockbackDis > 0)
-            {
-                GetKnockback(in skillinfo);
-            }
-            if (skillinfo.stunTime > 0)
-            {
-                GetStun(in skillinfo);
-            }
+            //if (skillinfo.knockbackDis > 0)
+            //{
+            //    GetKnockback(in skillinfo);
+            //}
+            //if (skillinfo.stunTime > 0)
+            //{
+            //    GetStun(in skillinfo);
+            //}
         }
     }
 

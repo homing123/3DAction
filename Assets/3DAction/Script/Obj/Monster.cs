@@ -7,7 +7,7 @@ public class Monster : Bio
     protected const string Anim_Skill = "Skill";
 
     protected Bio m_Target; // 플레이어 타겟
-    [SerializeField] protected Skill m_SkillInfo;
+    //[SerializeField] protected Skill m_SkillInfo;
     float m_SkillCurCoolTime;
     protected override void Awake()
     {

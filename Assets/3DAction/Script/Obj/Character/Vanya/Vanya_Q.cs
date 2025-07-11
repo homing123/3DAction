@@ -18,16 +18,16 @@ public class Vanya_Q : MonoBehaviour
     
     List<Bio> m_HitTarget = new List<Bio>();
 
-    Skill m_Skill;
+    SkillAttackInfo m_SkillAttackInfo;
     Action OnReturn2Vanya;
 
-    public void Setting(Character user, Vector2 useDirVT2, float originHeight, in Skill skill, Action ac_return2Vanya)
+    public void Setting(Character user, Vector2 useDirVT2, float originHeight, in SkillAttackInfo skillAttackInfo, Action ac_return2Vanya)
     {
         m_User = user;
         m_DirVT2 = useDirVT2;
         m_DestiVT2 = transform.position.VT2XZ() + m_DirVT2 * m_FirstMoveDis;
         m_OriginHeight = originHeight;
-        m_Skill = skill;
+        m_SkillAttackInfo = skillAttackInfo;
         m_ArrivedFirstDesti = false;
         transform.LookAt((transform.position.VT2XZ() + m_DirVT2).VT2XZToVT3(transform.position.y));
         OnReturn2Vanya = ac_return2Vanya;
@@ -138,7 +138,7 @@ public class Vanya_Q : MonoBehaviour
                 if(m_HitTarget.Contains(character) == false)
                 {
                     m_HitTarget.Add(character);
-                    character.GetAttacked(m_User, m_Skill.dmg, default);
+                    character.GetAttacked(m_User,in m_SkillAttackInfo, default);
                 }
             }
             return;
@@ -150,7 +150,7 @@ public class Vanya_Q : MonoBehaviour
             if (m_HitTarget.Contains(monster) == false)
             {
                 m_HitTarget.Add(monster);
-                monster.GetAttacked(m_User, m_Skill.dmg, default);
+                monster.GetAttacked(m_User, in m_SkillAttackInfo, default);
             }
             return;
         }
@@ -161,7 +161,7 @@ public class Vanya_Q : MonoBehaviour
             if (m_HitTarget.Contains(sandbag) == false)
             {
                 m_HitTarget.Add(sandbag);
-                sandbag.GetAttacked(m_User, m_Skill.dmg, default);
+                sandbag.GetAttacked(m_User, in m_SkillAttackInfo, default);
             }
             return;
         }

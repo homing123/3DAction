@@ -6,11 +6,14 @@ using UnityEditor;
 public class Ed_GoogleSheetReader : Editor
 {
     GoogleSheetReader m_Ins;
-    public async void LoadTextSheet()
+    public void LoadTextSheet()
     {
-        TextData[] textDatas = await GoogleSheetReader.LoadGoogleSheetAndSaveBinary<TextData>(m_Ins.m_TextSheetInfo);
-        TextData.SetDicData(textDatas);
-        GoogleSheetReader.SaveBinary(TextData.GetDicData(), TextData.FileName);
+        TextData.LoadGoogleSheetAndSaveBinary(m_Ins.m_TextSheetInfo);
+    }
+
+    public void LoadSkillSheet()
+    {
+        SkillData.LoadGoogleSheetAndSaveBinary(m_Ins.m_SkillSheetInfo);
     }
     public override void OnInspectorGUI()
     {
@@ -19,6 +22,15 @@ public class Ed_GoogleSheetReader : Editor
         if(GUILayout.Button("Load TextData"))
         {
             LoadTextSheet();
+        }
+        if(GUILayout.Button("Load SkillData"))
+        {
+            LoadSkillSheet();
+        }
+        if(GUILayout.Button("Load All Data"))
+        {
+            LoadTextSheet();
+            LoadSkillSheet();
         }
 
     }

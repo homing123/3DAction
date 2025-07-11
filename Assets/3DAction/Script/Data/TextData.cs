@@ -14,6 +14,10 @@ public enum LanguageKind
 [System.Serializable]
 public class TextData
 {
+    public const int SkillNotReady = 10000;
+    public const int SkillUnUseable = 10001;
+    public const int NotEnoughMP = 10002;
+
     public const string FileName = "Text";
     public static LanguageKind UserLanguageKind = LanguageKind.KOR; //후에 유저데이터로 변경
     
@@ -36,7 +40,7 @@ public class TextData
         }
         return "null";
     }
-    public static void SetDicData(TextData[] datas)
+    static void SetDicData(TextData[] datas)
     {
         D_Data = new Dictionary<int, TextData>(datas.Length);
         for(int i=0;i<datas.Length;i++)
@@ -44,14 +48,25 @@ public class TextData
             D_Data[datas[i].ID] = datas[i];
         }
     }
-    public static Dictionary<int, TextData> GetDicData()
+ 
+    public static void Log()
     {
-        return D_Data;
+        foreach(int key in D_Data.Keys)
+        {
+            Debug.Log($"{key}, {D_Data[key].KOR}");
+        }
     }
-    
+    public static async void LoadGoogleSheetAndSaveBinary(GoogleSheetReader.GoogleSheetInfo info)
+    {
+        Debug.Log($"TextData LoadGoogleSheet");
+        TextData[] textDatas = await GoogleSheetReader.LoadGoogleSheet2Instances<TextData>(info);
+        SetDicData(textDatas);
+        GoogleSheetReader.SaveBinary(D_Data, TextData.FileName);
+    }
     public static void LoadStreamingData()
     {
-        GoogleSheetReader.ReadBinary(D_Data, FileName);
+        GoogleSheetReader.ReadBinary(out D_Data, FileName);
+        Debug.Log($"TextData Load Success {D_Data.Count}");
     }
 }
 

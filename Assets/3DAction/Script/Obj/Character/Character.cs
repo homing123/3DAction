@@ -19,7 +19,7 @@ public enum CharacterAction
 public abstract class Character : Bio
 {
     public static Character PlayerCharacter;
-    const float AttackDestiSearchRange = 8;
+    [Tooltip("어택땅 찍었을 때 찍은곳 주변의 적을 찾는 범위 반지름")] const float AttackDestiSearchRange = 8;
     protected CharacterMove m_Move;
 
     Vector3 m_LastPos;
@@ -30,7 +30,13 @@ public abstract class Character : Bio
     public int m_TeamID { get; private set; }
     public Vector3 m_LastMoveDis { get; private set; }
     float m_CurAttackDelay;
-
+    int m_QSkillLevel;
+    int m_WSkillLevel;
+    int m_ESkillLevel;
+    int m_RSkillLevel;
+    int m_PSkillLevel;
+    int m_WeaponSkillLevel;
+    int m_SpellSkillLevel;
     protected override void Awake()
     {
         base.Awake();

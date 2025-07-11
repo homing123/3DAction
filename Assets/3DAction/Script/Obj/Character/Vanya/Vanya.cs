@@ -3,28 +3,54 @@ using Cysharp.Threading.Tasks;
 using System.Threading;
 using Cysharp.Threading.Tasks.CompilerServices;
 using System;
-//캐릭터 스킬
-//기본공격
-//Q,W,E,R
-//주문
-//무기스킬
+using UnityEditor.Experimental.GraphView;
 
-//기본공격은 현재 공격 대상이 사거리 안에 있는지 확인 후 사거리 안에 있다면 자동 시전
-//내부 쿨타임(공격속도)를 가지며, 공격모션 선딜후딜이 있음
-
-//다른 스킬들은 사용자 입력에 시전시도를 함
-
-//기본공격은 이동으로 취소되지만 스킬은 이동으로 취소 
 public class Vanya : Character
 {
     [SerializeField] Vanya_Attack m_VanyaAttackPrefab;
     [SerializeField] Vanya_Q m_VanyaQPrefab;
     [SerializeField] Transform m_VanyaQStartPos;
 
-    [SerializeField] Skill m_ESkill;
-    [SerializeField] Skill m_RSkill;
+    [SerializeField] int m_QSkillID;
+    [SerializeField] int m_WSkillID_1;
+    [SerializeField] int m_WSkillID_2;
+    [SerializeField] int m_ESkillID;
+    [SerializeField] int m_RSkillID;
+    [SerializeField] int m_PSkillID_1;
+    [SerializeField] int m_PSkillID_2;
+    [SerializeField] int m_WeaponSkillID;
+    [SerializeField] int m_SpellSkillID;
+    SkillData m_QSkillData;
+    SkillData m_WSkillData_1;
+    SkillData m_WSkillData_2;
+    SkillData m_ESkillData;
+    SkillData m_RSkillData;
+    SkillData m_PSkillData_1;
+    SkillData m_PSkillData_2;
+    SkillData m_WeaponSkillData;
+    SkillData m_SpellSkillData;
 
-    Skill[] m_Skill;
+    [Header("Attack")]
+    [SerializeField] float m_AttackPreDelay;
+
+    [Header("QSkill")]
+    [SerializeField] float m_QSkillPreDelay;
+
+    [Header("WSkill")]
+    bool m_WBasicCasting;
+    const int WBasicLoopCount = 5;
+    [SerializeField] float m_W1_SkillPreDelay = 0.1f;
+    [SerializeField] float m_W1_SkillRadius = 3;
+    [SerializeField] float m_W1_LoopDelay; //w스킬 사이의 반복 딜레이
+
+    [SerializeField] float m_W2_TotalAnimTime;
+    [SerializeField] float m_W2_AttackTime;
+
+    [Header("ESkill")]
+
+    [Header("RSkill")]
+
+    [Header("PSkill")]
     float[] m_SkillCoolTime;
 
     bool m_IsSkill;
@@ -34,11 +60,6 @@ public class Vanya : Character
     protected override void Start()
     {
         base.Start();
-        m_Skill = new Skill[7];
-        m_Skill[0] = m_QSkill;
-        m_Skill[1] = m_WBasicSkill;
-        m_Skill[2] = m_ESkill;
-        m_Skill[3] = m_RSkill;
         m_SkillCoolTime = new float[7];
 
     }
@@ -52,10 +73,6 @@ public class Vanya : Character
     }
 
     #region Attack
-    [Header("Attack")]
-    [SerializeField] float m_AttackRange;
-    [SerializeField] Skill m_AttackSkill;
-    [SerializeField] float m_AttackPreDelay;
 
     protected override bool TryAttack()
     {
@@ -92,7 +109,8 @@ public class Vanya : Character
             if (disToTarget <= GetAttackRange())
             {
                 Vanya_Attack vanyaAttack = Instantiate(m_VanyaAttackPrefab, m_VanyaQStartPos.position, Quaternion.identity);
-                vanyaAttack.Setting(this, m_AttackTarget, in m_AttackSkill);
+                SkillAttackInfo attackInfo = new SkillAttackInfo(this, m_Status.m_AttackDamage);
+                vanyaAttack.Setting(this, m_AttackTarget, in attackInfo);
             }
         }
 
@@ -167,16 +185,19 @@ public class Vanya : Character
         if (m_SkillCoolTime[idx] > 0)
         {
             //쿨타임
+            UI_SkillFailText.SetID(TextData.SkillNotReady);
             return false;
         }
         if (m_Status.m_CurMP < m_Skill[idx].useMP)
         {
             //엠피부족
+            UI_SkillFailText.SetID(TextData.NotEnoughMP);
             return false;
         }
         if (m_IsSkill)
         {
             //다른 행동중
+            UI_SkillFailText.SetID(TextData.SkillUnUseable);
             return false;
         }
         if(m_IsAttack)
@@ -194,9 +215,6 @@ public class Vanya : Character
         return true;
     }
     #region QSkill
-    [Header("QSkill")]
-    [SerializeField] Skill m_QSkill;
-    [SerializeField] float m_QSkillPreDelay;
     void QSkillReturn2Vanya()
     {
 
@@ -222,17 +240,8 @@ public class Vanya : Character
     }
     #endregion
     #region WSkill
-    [Header("WSkill")]
-    [SerializeField] float m_WSkillPreDelay = 0.1f;
-    [SerializeField] float m_WSkillRadius = 3;
-    [SerializeField] Skill m_WBasicSkill;
-    [SerializeField] float m_WBasicLoopDelay; //w스킬 사이의 반복 딜레이
-    bool m_WBasicCasting;
-    const int WBasicLoopCount = 5;
 
-    [SerializeField] Skill m_WSecondSkill;
-    [SerializeField] float m_WSecondAnimTime;
-    void WSkillHit(in HitRangeInfo hitRangeInfo, in DamageInfo dmginfo)
+    void WSkillHit(in HitRangeInfo hitRangeInfo, in SkillAttackInfo dmginfo)
     {
         Collider[] hits = HitRange.Overlap(in hitRangeInfo, out int count);
         for(int i=0;i<count;i++)

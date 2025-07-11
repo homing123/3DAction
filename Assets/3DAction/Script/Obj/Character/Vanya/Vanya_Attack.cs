@@ -12,13 +12,13 @@ public class Vanya_Attack : MonoBehaviour
     Vector3 m_Desti;
     Bio m_Target;
     Bio m_User;
-    Skill m_Skill;
+    SkillAttackInfo m_SkillAttackInfo;
     float m_LifeTime;
 
-    public void Setting(Bio user, Bio target, in Skill skill)
+    public void Setting(Bio user, Bio target, in SkillAttackInfo skillAttackInfo)
     {
         m_Target = target;
-        m_Skill = skill;
+        m_SkillAttackInfo = skillAttackInfo;
         m_Desti = m_Target.GetHitPos();
         m_User = user;
     }
@@ -39,7 +39,7 @@ public class Vanya_Attack : MonoBehaviour
         {
             if (m_Target != null)
             {
-                m_Target.GetAttacked(m_User, m_Skill.dmg, default);
+                m_Target.GetAttacked(m_User, m_SkillAttackInfo, default);
                 Destroy(this.gameObject);
             }
         }

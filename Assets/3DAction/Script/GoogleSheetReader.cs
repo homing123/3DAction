@@ -6,6 +6,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
 using System.Threading.Tasks;
+using static UnityEngine.Rendering.DebugUI;
 
 public class GoogleSheetReader : MonoBehaviour
 {
@@ -14,8 +15,9 @@ public class GoogleSheetReader : MonoBehaviour
     //명시된 순서에 맞게 binary읽어서 로드
 
     //inspector에 입력데이터는 url, 열범위(?~?), 행범위(1~?)
-    //const string TestURL = "https://docs.google.com/spreadsheets/d/16g04AMh2YydjKwtZsKuhJb0_EqDqz1efA8vg0DIYr4g/edit?gid=492334559#gid=492334559";
-    //const string TestURL2 = "https://docs.google.com/spreadsheets/d/16g04AMh2YydjKwtZsKuhJb0_EqDqz1efA8vg0DIYr4g/export?format=tsv&range=A1:E&gid=492334559";
+
+    //const string TestURL = "https://docs.google.com/spreadsheets/d/16g04AMh2YydjKwtZsKuhJb0_EqDqz1efA8vg0DIYr4g/edit?gid=492334559#gid=492334559"; //origin
+    //const string TestURL = "https://docs.google.com/spreadsheets/d/16g04AMh2YydjKwtZsKuhJb0_EqDqz1efA8vg0DIYr4g/export?format=tsv&range=A1:E&gid=492334559"; //edit
 
     [System.Serializable]
     public class GoogleSheetInfo
@@ -23,6 +25,7 @@ public class GoogleSheetReader : MonoBehaviour
         public string URL;
         public string RowMin;
         public string RowMax;
+        public int ColumnMin;
         public int ColumnMax;
     }
     const string URLFormat = "export?format=tsv&range=";
@@ -31,8 +34,7 @@ public class GoogleSheetReader : MonoBehaviour
     public GoogleSheetInfo m_TextSheetInfo;
     public GoogleSheetInfo m_SkillSheetInfo;
 
-
-    public static async Task<T[]> LoadGoogleSheetAndSaveBinary<T>(GoogleSheetInfo info) where T : new()
+    public static async Task<T[]> LoadGoogleSheet2Instances<T>(GoogleSheetInfo info) where T : new()
     {
         string url = EditURL(info);
         string data = await GetGoogleSheetData(url);
@@ -55,9 +57,10 @@ public class GoogleSheetReader : MonoBehaviour
         string[] splitSlash = info.URL.Split("/");
         string[] splitfragment = splitSlash[splitSlash.Length - 1].Split("#");
         string gid = splitfragment[splitfragment.Length - 1];
-        string rowMin = string.IsNullOrEmpty(info.RowMin) ? "A1" : info.RowMin+"1";
-        string rowMax = string.IsNullOrEmpty(info.RowMax) ? ":A" : ":"+info.RowMax;
-        string columnMax = info.ColumnMax <= 0 ? "&" : info.ColumnMax.ToString()+"&";
+        string rowMin = string.IsNullOrEmpty(info.RowMin) ? "A" : info.RowMin;
+        string rowMax = string.IsNullOrEmpty(info.RowMax) ? "A" : info.RowMax;
+        string columnMin = info.ColumnMin <= 0 ? "" : info.ColumnMin.ToString();
+        string columnMax = info.ColumnMax <= 0 ? "" : info.ColumnMax.ToString();
 
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < splitSlash.Length - 1; i++)
@@ -67,6 +70,8 @@ public class GoogleSheetReader : MonoBehaviour
         }
         builder.Append(URLFormat);
         builder.Append(rowMin);
+        builder.Append(columnMin);
+        builder.Append(":");
         builder.Append(rowMax);
         builder.Append(columnMax);
         builder.Append("&");
@@ -101,36 +106,64 @@ public class GoogleSheetReader : MonoBehaviour
     {
         string[] line = data.Split('\n');
         int dataCount = line.Length - 1;
-        string[] headersName = line[0].Split('\t');
+        string[] fieldNames = line[0].Split('\t');
 
-        PropertyInfo[] fieldInfose = new PropertyInfo[headersName.Length];
+        PropertyInfo[] fieldInfose = new PropertyInfo[fieldNames.Length];
         Type type = typeof(T);
-        for(int i=0;i<headersName.Length;i++)
+        for(int i=0;i< fieldNames.Length;i++)
         {
-            fieldInfose[i] = type.GetProperty(headersName[i].Trim(), BindingFlags.Public | BindingFlags.Instance);
+            fieldInfose[i] = type.GetProperty(fieldNames[i].Trim(), BindingFlags.Public | BindingFlags.Instance);
         }
-        T[] textDatas = new T[dataCount];
+        T[] instances = new T[dataCount];
 
         for (int i = 0; i < line.Length - 1; i++)
         {
             string[] datas = line[i + 1].Split('\t');
-            textDatas[i] = new T();
+            instances[i] = new T();
             for (int j = 0; j < fieldInfose.Length; j++)
             {
-                object convertedValue = Convert.ChangeType(datas[j], fieldInfose[j].PropertyType);
+                object convertedValue = null;
+                if (fieldInfose[j].PropertyType.IsEnum)
+                {
+                    if (Enum.TryParse(fieldInfose[j].PropertyType, datas[j], false, out convertedValue) == false)
+                    {
+                        convertedValue = 0;
+                    }
+                }
+                //데이터가 비어있을 경우
+                else if ((string.IsNullOrEmpty(datas[j]) || string.IsNullOrWhiteSpace(datas[j])))
+                {
+                    if (fieldInfose[j].PropertyType == typeof(float) || fieldInfose[j].PropertyType == typeof(int))
+                    {
+                        convertedValue = 0;
+                    }
+                    else if(fieldInfose[j].PropertyType == typeof(bool))
+                    {
+                        convertedValue = false;
+                    }
+                    else
+                    {
+                        convertedValue = Convert.ChangeType(datas[j], fieldInfose[j].PropertyType);
+                    }
+                }
+                else
+                {
+                    convertedValue = Convert.ChangeType(datas[j], fieldInfose[j].PropertyType);
+                }
+
                 if (fieldInfose[j].PropertyType == typeof(string))
                 {
                     string str = (string)convertedValue;
                     str = str.Replace(LineChangeSymbol, "\n");     
-                    fieldInfose[j].SetValue(textDatas[i], str);
-                }
+                    fieldInfose[j].SetValue(instances[i], str);
+                }  
                 else
                 {
-                    fieldInfose[j].SetValue(textDatas[i], convertedValue);
+                    fieldInfose[j].SetValue(instances[i], convertedValue);
                 }
             }
         }
-        array = textDatas;
+        array = instances;
     }
     public static void SaveBinary<T>(T data, string fileName)
     {
@@ -147,7 +180,7 @@ public class GoogleSheetReader : MonoBehaviour
             stream.Flush();
         } // 자동으로 Close() 호출됨
     }
-    public static void ReadBinary<T>(T data, string fileName)
+    public static void ReadBinary<T>(out T data, string fileName)
     {
         string korPath = Application.streamingAssetsPath + $"/{fileName}.bin";
         MemoryStream me = new MemoryStream(File.ReadAllBytes(korPath));

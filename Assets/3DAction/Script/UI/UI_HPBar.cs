@@ -49,9 +49,9 @@ public class UI_HPBar : MonoBehaviour
         {
             return;
         }
-        float maxHP = m_Target.m_Status.m_MaxHP;
+        float maxHP = m_Target.m_Status.m_TotalMaxHP;
         float curHP = m_Target.m_Status.m_CurHP;
-        float maxMP = m_Target.m_Status.m_MaxMP;
+        float maxMP = m_Target.m_Status.m_TotalMaxMP;
         float curMP = m_Target.m_Status.m_CurMP;
 
         float hpBarcodeWidth = HPBarBGWidth / (maxHP * 0.001f);

@@ -1,6 +1,22 @@
 using UnityEngine;
 using System;
 
+//### 레벨에 따른 증가
+//체력
+//마나
+//방어력
+//공격력
+//공격속도
+//---
+//### 캐릭터별 고정값
+//스킬증폭
+//쿨다운감소
+//치명타확률
+//이동속도
+//시야
+//기본공격사거리
+//모든피해흡혈
+//생명력흡수
 [System.Serializable]
 public class Status : MonoBehaviour
 {
@@ -16,44 +32,45 @@ public class Status : MonoBehaviour
     {
         Knockback = 1 << 0,
         Stun = 1<<1,
-        Silence = 1<<2,
-        TargetingHide = 1<< 3,
-        Skill = 1<<4,
-        Sleep = 1 << 5,
-
     }
 
     //통일 상수
-    const float KnockbackAcc = -2;
-    const float KnockbackTime = 0.35f;
-
+    const float CriticalDMG = 75f;
+    const float MaxSkillCooldown = 35f;
 
     [Header("기본 스테이터스")]
-    [SerializeField] float MaxHP = 100f;
-    [SerializeField] float MaxMP = 50f;
-    [SerializeField] float AttackDamage = 10f;
-    [SerializeField] float SkillDamage = 10f;
-    [SerializeField] float Defense = 5f;
-    [SerializeField] float MoveSpeed = 5f;
-    [SerializeField] float AttackSpeed = 1f;
-    // 프로퍼티들
+
+    //Status
     bool m_Death;
-    public float m_MaxHP { get; private set; }
-    public float m_MaxMP { get; private set; }
+    public float m_TotalMaxHP { get; private set; }
+    public float m_TotalMaxMP { get; private set; }
+    public float m_TotalArmor { get; private set; }
+    public float m_TotalDmg { get; private set; }
+    public float m_TotalAttackSpeed { get; private set; }
+    public float m_TotalSkillDmg { get; private set; }
+    public float m_TotalSkillCooldown { get; private set; }
+    public float m_TotalCriticalPer { get; private set; }
+    public float m_TotalMoveSpeed { get; private set; }
+    public float m_TotalSight { get; private set; }
+    public float m_TotalAttackRange { get; private set; }
+    public float m_TotalAllLifeSteal { get; private set; }
+    public float m_TotalAttackLifeSteal { get; private set; }
+
     public float m_CurHP { get; private set; }
     public float m_CurMP { get; private set; }
-    public float m_AttackDamage { get; private set; }
-    public float m_SkillDamage { get; private set; }
-    public float m_Defense { get; private set; }
-    public float m_MoveSpeed { get; private set; }
-    public float m_AttackSpeed { get; private set; }
+
+    public float m_EXP { get; private set; }
+    public int m_Level { get; private set; }
+
     State m_State;
-    public float HPPercent { get { return m_CurHP / m_MaxHP; } }
+    public float HPPercent { get { return m_CurHP / m_TotalMaxHP; } }
 
     public event Action OnDeath; // 죽음 이벤트
     public event Action OnStatusChanged;
     public event Action<float> OnGetDamage; // 데미지 받은 이벤트
     public event Action<State, State> OnStateChanged; //STATE_1 = xor 이전과 달라진 비트 => 1, STATE_2 = 현재STATE => m_State
+
+    CharacterData m_CharacterData;
 
     Bio m_Bio;
     float m_CurKnockbackTime;
@@ -63,8 +80,10 @@ public class Status : MonoBehaviour
     private void Awake()
     {
         m_Bio = GetComponent<Bio>();
+    }
+    private void Start()
+    {
         m_Death = false;
-        StatusInit();
     }
 
     private void Update()
@@ -73,10 +92,10 @@ public class Status : MonoBehaviour
         {
             return;
         }
-        if((m_State & State.Knockback) > 0)
+        if ((m_State & State.Knockback) > 0)
         {
             m_CurKnockbackTime -= Time.deltaTime;
-            if(m_CurKnockbackTime < 0)
+            if (m_CurKnockbackTime < 0)
             {
                 SetState(State.Knockback, false);
             }
@@ -91,44 +110,56 @@ public class Status : MonoBehaviour
         }
     }
 
-    [ContextMenu("Status Updaate")]
-    void StatusInit()
+    void CalculateTotalStatus()
     {
-        m_MaxHP = MaxHP;
-        m_MaxMP = MaxMP;
-        m_CurHP = m_MaxHP;
-        m_CurMP = m_MaxMP;
-        m_AttackDamage = AttackDamage;
-        m_SkillDamage = SkillDamage;
-        m_Defense = Defense;
-        m_MoveSpeed = MoveSpeed;
-        m_AttackSpeed = AttackSpeed;
+        switch (m_Bio.m_BioType)
+        {
+            case Bio_Type.Character:
+                m_TotalMaxHP = m_CharacterData.HP[0];
+                m_TotalMaxMP = m_CharacterData.MP[0];
+                m_TotalArmor = m_CharacterData.Armor[0];
+                m_TotalDmg = m_CharacterData.Dmg[0];
+                m_TotalAttackSpeed = m_CharacterData.AttackSpeed[0];
+
+                m_TotalSkillDmg = m_CharacterData.SkillDmg;
+                m_TotalSkillCooldown = m_CharacterData.SkillCooldown;
+                m_TotalCriticalPer = m_CharacterData.CriticalPer;
+                m_TotalMoveSpeed = m_CharacterData.MoveSpeed;
+                m_TotalSight = m_CharacterData.Sight;
+                m_TotalAttackRange = m_CharacterData.AttackRange;
+                m_TotalAllLifeSteal = m_CharacterData.AllLifeSteal;
+                m_TotalAttackLifeSteal = m_CharacterData.AttackLifeSteal;
+                break;
+        }
     }
+    public void CharacterStatusInit(CharacterData characterData)
+    {
+        m_Level = 0;
+        //캐릭터 스테이터스
+        m_CharacterData = characterData;
+        CalculateTotalStatus();
+        m_CurHP = m_TotalMaxHP;
+        m_CurMP = m_TotalMaxMP;
+    }
+    public void LevelUp()
+    {
+
+    }
+
+   
+
+    
+    
     void SetState(State state, bool on)
     {
         State lastState = m_State;
         m_State = on ? m_State | state : m_State & (~state);
         OnStateChanged?.Invoke(lastState ^ m_State, m_State);
     }
-    //void GetKnockback(in SkillInfo skillInfo)
-    //{
-    //    SetState(State.Knockback, true);
-    //    m_CurKnockbackTime = KnockbackTime;
-    //    //m_Bio.SetMoveAnimDir(skillInfo.knockBackDir, skillInfo.knockbackDis, KnockbackTime, KnockbackAcc);
-    //}
-    //void GetStun(in SkillInfo skillInfo)
-    //{
-    //    SetState(State.Stun, true);
-    //    m_CurStunTime = skillInfo.stunTime;
-    //}
-    // 방어력에 따른 데미지 계산
+
     float CalculateDamageAfterDefense(float originalDamage)
     {
-        // 방어력이 높을수록 데미지 감소 (최대 감소율 제한)
-        float damageReduction = m_Defense / (m_Defense + 100f);
-
-        float reducedDamage = originalDamage * (1f - damageReduction);
-        return Mathf.Max(1f, reducedDamage); // 최소 1의 데미지는 받도록
+        return originalDamage * (100 / (m_TotalArmor + 100));
     }
 
     void Death()
@@ -172,30 +203,6 @@ public class Status : MonoBehaviour
             //}
         }
     }
-
-    // 체력 회복 메서드
-    public void Heal(float healAmount)
-    {
-        if (m_Death) return;
-
-        m_CurHP += healAmount;
-        m_CurHP = Mathf.Min(m_MaxHP, m_CurHP);
-
-        OnStatusChanged?.Invoke();
-    }
-
-   
-
-   
-    public void StartSkillCasting()
-    {
-        SetState(State.Skill, true);
-    }
-    public void EndSkillCasting()
-    {
-        SetState(State.Skill, false);
-    }
-
     public bool Movable()
     {
         return m_Death == false && m_State == 0;
@@ -206,4 +213,23 @@ public class Status : MonoBehaviour
     }
 
 
+    public float CalcSkillCooldown(SkillData skillData)
+    {
+        float skillCooldown = MathF.Min(m_TotalSkillCooldown, MaxSkillCooldown);
+        return skillData.Cooldown - (skillData.Cooldown * skillCooldown / 100);
+    }
+    public float CalcAttackDamage(out bool isCritical)
+    {
+        float random = 100;
+        if (m_TotalCriticalPer > 0)
+        {
+            random = UnityEngine.Random.Range(0f, 100f);
+        }
+        isCritical = random < m_TotalCriticalPer;
+        return m_TotalDmg + (isCritical == true ? m_TotalDmg * CriticalDMG / 100 : 0);
+    }
+    public float CalcSkillDamage(SkillData skillData, int damageIdx)
+    {
+        return m_TotalSkillDmg * skillData.SDMulDamages[damageIdx] + skillData.Damages[damageIdx];
+    }
 }

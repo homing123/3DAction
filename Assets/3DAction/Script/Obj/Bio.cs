@@ -87,10 +87,6 @@ public class Bio : MonoBehaviour
         m_Status.TakeDamage(in skillAttackInfo);
     }
 
-    protected void SkillEnd()
-    {
-        m_Status.EndSkillCasting();
-    }
     protected async UniTask RotToDir(Vector2 dir, CancellationTokenSource cts)
     {
         while (true)

@@ -12,9 +12,9 @@ public class Sandbag : Bio
     protected override void Update()
     {
         base.Update();
-        if (m_IsHeal)
-        {
-            m_Status.Heal(m_Status.m_MaxHP);
-        }
+        //if (m_IsHeal)
+        //{
+        //    m_Status.Heal(m_Status.m_MaxHP);
+        //}
     }
 }

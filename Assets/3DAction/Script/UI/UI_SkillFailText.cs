@@ -13,6 +13,27 @@ public class UI_SkillFailText : MonoBehaviour
         Ins.m_Text.SetText(str);
         Ins.Active();
     }
+    public static void SetSkillState(SkillState skillState)
+    {
+        switch(skillState)
+        {
+            case SkillState.CharacterStateUnUseableSkill:
+                SetID(TextData.SkillUnUseable);
+                break;
+            case SkillState.NotEnoughMP:
+                SetID(TextData.NotEnoughMP);
+                break;
+            case SkillState.Level0:
+                SetID(TextData.SkillLevel0);
+                break;
+            case SkillState.Cooldown:
+                SetID(TextData.SkillCooldown);
+                break;
+            case SkillState.Other:
+                SetText("SkillState Other");
+                break;
+        }
+    }
 
 
     [SerializeField] TextHandler m_Text;

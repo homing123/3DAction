@@ -30,13 +30,12 @@ public abstract class Character : Bio
     public int m_TeamID { get; private set; }
     public Vector3 m_LastMoveDis { get; private set; }
     float m_CurAttackDelay;
-    int m_QSkillLevel;
-    int m_WSkillLevel;
-    int m_ESkillLevel;
-    int m_RSkillLevel;
-    int m_PSkillLevel;
-    int m_WeaponSkillLevel;
-    int m_SpellSkillLevel;
+
+    public bool m_IsSkill { get; protected set; }
+    public bool m_IsAttack { get; protected set; }
+
+    protected CancellationTokenSource m_SkillCTS;
+    protected CancellationTokenSource m_AttackCTS;
     protected override void Awake()
     {
         base.Awake();
@@ -274,7 +273,7 @@ public abstract class Character : Bio
 
     void CheckAttackDelay()
     {
-        float attackDelay = 1 / m_Status.m_AttackSpeed;
+        float attackDelay = 1 / m_Status.m_TotalAttackSpeed;
         if (m_CurAttackDelay >= attackDelay)
         {
             if (TryAttack())

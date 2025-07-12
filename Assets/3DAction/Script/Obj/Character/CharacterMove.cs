@@ -24,7 +24,7 @@ public class CharacterMove : MonoBehaviour
     void Start()
     {
         m_NavAgent.updateRotation = false;
-        m_NavAgent.speed = m_Status.m_MoveSpeed;
+        m_NavAgent.speed = m_Status.m_TotalMoveSpeed;
         m_Status.OnStatusChanged += OnStatusChanged;
     }
     private void OnDestroy()
@@ -35,7 +35,7 @@ public class CharacterMove : MonoBehaviour
 
     void OnStatusChanged()
     {
-        m_NavAgent.speed = m_Status.m_MoveSpeed;
+        m_NavAgent.speed = m_Status.m_TotalMoveSpeed;
     }
     // Update is called once per frame
     void Update()

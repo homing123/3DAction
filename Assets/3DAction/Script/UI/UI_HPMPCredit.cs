@@ -33,9 +33,9 @@ public class UI_HPMPCredit : MonoBehaviour
             Debug.Log("스테이터스 없");
         }
         Status playerStatus = Character.PlayerCharacter.m_Status;
-        float maxHP = playerStatus.m_MaxHP;
+        float maxHP = playerStatus.m_TotalMaxHP;
         float curHP = playerStatus.m_CurHP;
-        float maxMP = playerStatus.m_MaxMP;
+        float maxMP = playerStatus.m_TotalMaxMP;
         float curMP = playerStatus.m_CurMP;
 
         int ceilMaxHP = Mathf.CeilToInt(maxHP);

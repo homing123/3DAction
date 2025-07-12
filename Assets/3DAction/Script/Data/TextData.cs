@@ -14,9 +14,10 @@ public enum LanguageKind
 [System.Serializable]
 public class TextData
 {
-    public const int SkillNotReady = 10000;
+    public const int SkillCooldown = 10000;
     public const int SkillUnUseable = 10001;
     public const int NotEnoughMP = 10002;
+    public const int SkillLevel0 = 10003;
 
     public const string FileName = "Text";
     public static LanguageKind UserLanguageKind = LanguageKind.KOR; //후에 유저데이터로 변경

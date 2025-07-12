@@ -39,7 +39,7 @@ public class TextData
                     return D_Data[id].ENG;
             }
         }
-        return "null";
+        return $"{id} null";
     }
     static void SetDicData(TextData[] datas)
     {

@@ -1,5 +1,12 @@
 using UnityEngine;
 using System.Collections.Generic;
+public enum SkillType
+{
+    WeaponSkill,
+    SpellSkill,
+    CharacterSkill
+}
+
 public enum BuffTarget
 {
     User = 0,
@@ -44,9 +51,9 @@ public struct SkillAttackInfo
     {
         damage = _damage;
     }
-    public SkillAttackInfo(Bio user, SkillData skillData)
+    public SkillAttackInfo(Bio user, SkillData skillData, int idx = 0)
     {
-        damage = skillData.Damages[0];
+        damage = user.m_Status.CalcSkillDamage(skillData, idx);
     }
 }
 
@@ -122,6 +129,7 @@ public class SkillData
     {
         public int ID { get; private set; }
         public int SkillLevel { get; private set; }
+        public SkillType SkillType { get; private set; }
         public int SkillName { get; private set; }
         public int SkillDesc { get; private set; }
         public string IconPath { get; private set; }
@@ -135,6 +143,7 @@ public class SkillData
 
     public int ID { get; private set; }
     public int SkillLevel { get; private set; }
+    public SkillType SkillType { get; private set; }
     public int SkillName { get; private set; }
     public int SkillDesc { get; private set; }
     public string IconPath { get; private set; }
@@ -149,6 +158,7 @@ public class SkillData
     {
         ID = sheetData.ID;
         SkillLevel = sheetData.SkillLevel;
+        SkillType = sheetData.SkillType;
         SkillName = sheetData.SkillName;
         SkillDesc = sheetData.SkillDesc;
         IconPath = sheetData.IconPath;

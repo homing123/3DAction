@@ -13,6 +13,7 @@ public class LoadingSceneM : MonoBehaviour
     {
         TextData.LoadStreamingData();
         SkillData.LoadStreamingData();
+        CharacterData.LoadStreamingData();
         SceneManager.LoadScene("PlayerMoveTest");
     }
 }

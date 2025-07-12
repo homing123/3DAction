@@ -80,9 +80,6 @@ public class Status : MonoBehaviour
     private void Awake()
     {
         m_Bio = GetComponent<Bio>();
-    }
-    private void Start()
-    {
         m_Death = false;
     }
 
@@ -140,6 +137,13 @@ public class Status : MonoBehaviour
         CalculateTotalStatus();
         m_CurHP = m_TotalMaxHP;
         m_CurMP = m_TotalMaxMP;
+        OnStatusChanged?.Invoke();
+    }
+    public void SandbagStatusInit()
+    {
+        m_TotalMaxHP = 1000;
+        m_CurHP = m_TotalMaxHP;
+        OnStatusChanged?.Invoke();
     }
     public void LevelUp()
     {
@@ -228,7 +232,7 @@ public class Status : MonoBehaviour
         isCritical = random < m_TotalCriticalPer;
         return m_TotalDmg + (isCritical == true ? m_TotalDmg * CriticalDMG / 100 : 0);
     }
-    public float CalcSkillDamage(SkillData skillData, int damageIdx)
+    public float CalcSkillDamage(SkillData skillData, int damageIdx = 0)
     {
         return m_TotalSkillDmg * skillData.SDMulDamages[damageIdx] + skillData.Damages[damageIdx];
     }

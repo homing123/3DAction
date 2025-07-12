@@ -24,11 +24,11 @@ public class Monster : Bio
         //UI_HPBar.Create(m_Status);
     }
 
-    protected void Update()
-    {
-        //UpdateMonster();
-        m_SkillCurCoolTime -= Time.deltaTime;
-    }
+    //protected void Update()
+    //{
+    //    //UpdateMonster();
+    //    m_SkillCurCoolTime -= Time.deltaTime;
+    //}
 
     //void UpdateMonster()
     //{

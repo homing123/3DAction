@@ -205,20 +205,6 @@ MonoBehaviour:
   HitRange_Circle: {fileID: 7910824128300723616, guid: 976675e3f7810714d9c30e184ab92262, type: 3}
   VFX_Slash: {fileID: 0}
   Proj_Rock: {fileID: 0}
-  m_DefaultSprite: {fileID: 0}
-  m_SpriteAndKey:
-  - key: 0
-    sprite: {fileID: 21300000, guid: 12ad66fa176831349b8dfbbc2b04c1c9, type: 3}
-  - key: 0
-    sprite: {fileID: 0}
-  - key: 0
-    sprite: {fileID: 0}
-  - key: 0
-    sprite: {fileID: 0}
-  - key: 0
-    sprite: {fileID: 0}
-  - key: 0
-    sprite: {fileID: 0}
 --- !u!114 &340526772
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -260,6 +246,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2569dc31783757746af30e9fcf09f4e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_UseLog: 0
   m_TextSheetInfo:
     URL: https://docs.google.com/spreadsheets/d/16g04AMh2YydjKwtZsKuhJb0_EqDqz1efA8vg0DIYr4g/edit?gid=1637670913#gid=1637670913
     RowMin: C
@@ -269,7 +256,13 @@ MonoBehaviour:
   m_SkillSheetInfo:
     URL: https://docs.google.com/spreadsheets/d/16g04AMh2YydjKwtZsKuhJb0_EqDqz1efA8vg0DIYr4g/edit?gid=492334559#gid=492334559
     RowMin: C
-    RowMax: S
+    RowMax: N
+    ColumnMin: 0
+    ColumnMax: 0
+  m_CharacterSheetInfo:
+    URL: https://docs.google.com/spreadsheets/d/16g04AMh2YydjKwtZsKuhJb0_EqDqz1efA8vg0DIYr4g/edit?gid=1083994360#gid=1083994360
+    RowMin: B
+    RowMax: W
     ColumnMin: 0
     ColumnMax: 0
 --- !u!4 &483538862

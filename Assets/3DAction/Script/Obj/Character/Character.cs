@@ -22,6 +22,8 @@ public abstract class Character : Bio
     [Tooltip("어택땅 찍었을 때 찍은곳 주변의 적을 찾는 범위 반지름")] const float AttackDestiSearchRange = 8;
     protected CharacterMove m_Move;
 
+    [SerializeField] int m_CharacterID;
+    protected CharacterData m_CharacterData;
     Vector3 m_LastPos;
     CharacterAction m_CharacterAction;
     Transform m_ObjectTarget;
@@ -50,6 +52,8 @@ public abstract class Character : Bio
         base.Start();
         m_LastPos = transform.position;
         PlayerInput.Ins.OnInput += OnInput;
+        m_CharacterData = CharacterData.GetData(m_CharacterID);
+        m_Status.CharacterStatusInit(m_CharacterData);
     }
     protected override void Update()
     {

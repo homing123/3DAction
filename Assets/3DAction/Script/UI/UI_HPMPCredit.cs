@@ -46,8 +46,11 @@ public class UI_HPMPCredit : MonoBehaviour
         T_HP.text = ceilCurHP + " / " + ceilMaxHP;
         T_MP.text = ceilCurMP + " / " + ceilMaxMP;
 
-        m_HPGauge.fillAmount = Mathf.Clamp01(curHP / maxHP);
-        m_MPGauge.fillAmount = Mathf.Clamp01(curMP / maxMP);
+        float hpFill = maxHP == 0 ? 0 : Mathf.Clamp01(curHP / maxHP);
+        m_HPGauge.fillAmount = hpFill;
+
+        float mpFill = maxMP == 0 ? 0 : Mathf.Clamp01(curMP / maxMP);
+        m_MPGauge.fillAmount = mpFill;
     }
     void SetCredit()
     {

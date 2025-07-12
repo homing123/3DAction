@@ -19,6 +19,19 @@ public class GoogleSheetReader : MonoBehaviour
     //const string TestURL = "https://docs.google.com/spreadsheets/d/16g04AMh2YydjKwtZsKuhJb0_EqDqz1efA8vg0DIYr4g/edit?gid=492334559#gid=492334559"; //origin
     //const string TestURL = "https://docs.google.com/spreadsheets/d/16g04AMh2YydjKwtZsKuhJb0_EqDqz1efA8vg0DIYr4g/export?format=tsv&range=A1:E&gid=492334559"; //edit
 
+    static GoogleSheetReader ins;
+    static GoogleSheetReader Ins
+    {
+        get
+        {
+            if (ins == null)
+            {
+                ins = FindFirstObjectByType<GoogleSheetReader>();
+            }
+            return ins;
+        }
+    }
+    [SerializeField] bool m_UseLog;
     [System.Serializable]
     public class GoogleSheetInfo
     {
@@ -33,6 +46,7 @@ public class GoogleSheetReader : MonoBehaviour
 
     public GoogleSheetInfo m_TextSheetInfo;
     public GoogleSheetInfo m_SkillSheetInfo;
+    public GoogleSheetInfo m_CharacterSheetInfo;
 
     public static async Task<T[]> LoadGoogleSheet2Instances<T>(GoogleSheetInfo info) where T : new()
     {
@@ -122,6 +136,17 @@ public class GoogleSheetReader : MonoBehaviour
             instances[i] = new T();
             for (int j = 0; j < fieldInfose.Length; j++)
             {
+                if (fieldInfose[j] == null)
+                {
+                    Log($"null : " + fieldNames[j]);
+                }
+                else
+                {
+                    Log(fieldInfose[j].Name);
+                }
+                Log(datas[j]);
+
+
                 object convertedValue = null;
                 if (fieldInfose[j].PropertyType.IsEnum)
                 {
@@ -188,7 +213,14 @@ public class GoogleSheetReader : MonoBehaviour
         data = (T)bf.Deserialize(me);
     }
 
-
+    static void Log(string log)
+    {
+        if(Ins.m_UseLog == false)
+        {
+            return;
+        }
+        Debug.Log(log);
+    }
 
     //    public static T ReadData<T>(string filename, string filepath = null)
     //    {

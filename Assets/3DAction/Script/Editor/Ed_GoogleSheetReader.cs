@@ -15,6 +15,10 @@ public class Ed_GoogleSheetReader : Editor
     {
         SkillData.LoadGoogleSheetAndSaveBinary(m_Ins.m_SkillSheetInfo);
     }
+    public void LoadCharacterSheet()
+    {
+        CharacterData.LoadGoogleSheetAndSaveBinary(m_Ins.m_CharacterSheetInfo);
+    }
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();
@@ -27,10 +31,15 @@ public class Ed_GoogleSheetReader : Editor
         {
             LoadSkillSheet();
         }
-        if(GUILayout.Button("Load All Data"))
+        if (GUILayout.Button("Load CharacterData"))
+        {
+            LoadCharacterSheet();
+        }
+        if (GUILayout.Button("Load All Data"))
         {
             LoadTextSheet();
             LoadSkillSheet();
+            LoadCharacterSheet();
         }
 
     }

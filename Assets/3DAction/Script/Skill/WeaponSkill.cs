@@ -17,7 +17,7 @@ public class WeaponSkill
 
     public static int GetWeaponSkillID(WeaponType weaponType)
     {
-        return D_WeaponSkillID[WeaponType];
+        return D_WeaponSkillID[weaponType];
     }
 
     

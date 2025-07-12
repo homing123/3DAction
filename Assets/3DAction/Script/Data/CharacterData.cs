@@ -103,5 +103,13 @@ public class CharacterData
         GoogleSheetReader.ReadBinary(out D_Data, FileName);
         Debug.Log($"CharacterData Load Success {D_Data.Count}");
     }
+    public static CharacterData GetData(int id)
+    {
+        if(D_Data.ContainsKey(id))
+        {
+            return D_Data[id];
+        }
+        return null;
+    }
 
 }

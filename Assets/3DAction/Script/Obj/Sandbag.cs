@@ -9,6 +9,11 @@ public class Sandbag : Bio
         base.Awake();
         m_BioType = Bio_Type.Sandbag;
     }
+    protected override void Start()
+    {
+        base.Start();
+        m_Status.SandbagStatusInit();
+    }
     protected override void Update()
     {
         base.Update();

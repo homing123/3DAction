@@ -3165,42 +3165,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 2790643954275719899, guid: f7a587b5ffb92ce43b1c694b8f64a8ba, type: 3}
-      propertyPath: AttackSpeed
-      value: 1.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 2790643954275719899, guid: f7a587b5ffb92ce43b1c694b8f64a8ba, type: 3}
-      propertyPath: AttackDamage
-      value: 50
-      objectReference: {fileID: 0}
-    - target: {fileID: 5435345041946134777, guid: f7a587b5ffb92ce43b1c694b8f64a8ba, type: 3}
-      propertyPath: QSkill_PreDelay
-      value: 0.15
-      objectReference: {fileID: 0}
-    - target: {fileID: 5435345041946134777, guid: f7a587b5ffb92ce43b1c694b8f64a8ba, type: 3}
-      propertyPath: m_WBasicLoopDelay
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 5435345041946134777, guid: f7a587b5ffb92ce43b1c694b8f64a8ba, type: 3}
-      propertyPath: BaseAttack_PreDelay
-      value: 0.15
-      objectReference: {fileID: 0}
-    - target: {fileID: 5435345041946134777, guid: f7a587b5ffb92ce43b1c694b8f64a8ba, type: 3}
-      propertyPath: m_WBasicSkill.coolTime
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 5435345041946134777, guid: f7a587b5ffb92ce43b1c694b8f64a8ba, type: 3}
-      propertyPath: m_WSecondSkill.coolTime
-      value: 10
-      objectReference: {fileID: 0}
-    - target: {fileID: 5435345041946134777, guid: f7a587b5ffb92ce43b1c694b8f64a8ba, type: 3}
-      propertyPath: m_WBasicSkill.dmg.damage
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5435345041946134777, guid: f7a587b5ffb92ce43b1c694b8f64a8ba, type: 3}
-      propertyPath: m_WSecondSkill.dmg.damage
-      value: 2
-      objectReference: {fileID: 0}
     - target: {fileID: 8157081548456333473, guid: f7a587b5ffb92ce43b1c694b8f64a8ba, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0

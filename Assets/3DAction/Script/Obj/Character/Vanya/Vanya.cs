@@ -22,7 +22,7 @@ public class Vanya : Character
     [SerializeField] Transform m_VanyaQStartPos;
 
     Dictionary<SkillPos, CharacterSkill> D_CharacterSkill;
-
+    CharacterSkill m_W2Skill;
     [Header("Attack")]
     [SerializeField] float m_AttackPreDelay;
 
@@ -34,10 +34,10 @@ public class Vanya : Character
     [SerializeField] float m_WSkillRadius = 3;
 
     [SerializeField] float m_W1SkillPreDelay = 0.1f;
-    [SerializeField] float m_W1LoopDelay; //w스킬 사이의 반복 딜레이
 
     [SerializeField] float m_W2TotalAnimTime;
     [SerializeField] float m_W2AttackTime;
+
 
     //[Header("ESkill")]
 
@@ -60,6 +60,8 @@ public class Vanya : Character
         D_CharacterSkill[SkillPos.Weapon] = new CharacterSkill(WeaponSkill.GetWeaponSkillID(WeaponType.Arcana));
         D_CharacterSkill[SkillPos.Spell] = new CharacterSkill(SpellSkill.GetSpellSkillID(SpellType.Artifact));
 
+        m_W2Skill = new CharacterSkill(W2SkillID);
+
     }
     protected override void Update()
     {
@@ -69,6 +71,8 @@ public class Vanya : Character
             D_CharacterSkill[skillPos].CooldownReduction(Time.deltaTime);
             D_CharacterSkill[skillPos].CheckState(this);
         }
+        m_W2Skill.CooldownReduction(Time.deltaTime);
+        m_W2Skill.CheckState(this);
     }
 
     #region Attack
@@ -156,7 +160,6 @@ public class Vanya : Character
                     UI_SkillFailText.SetSkillState(D_CharacterSkill[SkillPos.Q].skillState);
                     return false;
                 }
-                break;
             case KeyCode.W:
                 if (D_CharacterSkill[SkillPos.W].skillState == SkillState.Useable)
                 {
@@ -177,26 +180,6 @@ public class Vanya : Character
                     UI_SkillFailText.SetSkillState(D_CharacterSkill[SkillPos.W].skillState);
                     return false;
                 }
-                //idx = 1;
-                ////w2 스킬 쓰는곳
-                //if (m_WBasicCasting)
-                //{
-                //    m_WBasicCasting = false;
-                //    CancelSkill();
-                //    if (m_SkillCTS != null)
-                //    {
-                //        m_SkillCTS.Dispose();
-                //    }
-                //    m_SkillCTS = new CancellationTokenSource();
-                //    WSecondSkill(m_SkillCTS).Forget();
-                //    m_SkillCoolTime[idx] = m_Status.CalcSkillCooldown(m_WSkillData_1) + m_Status.CalcSkillCooldown(m_WSkillData_2);
-                //    return true;
-                //}
-                //skillUnitask = () =>
-                //{
-                //    WBasicSkill(m_SkillCTS).Forget();
-                //};
-                break;
             case KeyCode.E:
                 break;
             case KeyCode.R:
@@ -259,6 +242,10 @@ public class Vanya : Character
         //이속증가효과 제거
 
     }
+    void WSkillEnd()
+    {
+
+    }
     async UniTaskVoid WSkill(CancellationTokenSource cts)
     {
         //w스킬은 5번공격하는 오브젝트를 생성하는 형태로 가자
@@ -272,53 +259,55 @@ public class Vanya : Character
             return;
         }
         Vanya_W vanyaW = Instantiate(m_VanyaWPrefab);
-        vanyaW.Setting(this, skillData);
+        //이속증가
+        vanyaW.Setting(this, skillData, WSkillEnd);    
         OnWKeyInput += WSkillCancelAndW2SkillCasting;
-
-        //이속증가
         m_IsSkill = false;
-        Debug.Log("WBasicEnd");
-        m_WBasicCasting = true;
-        //이속증가
-        for (int i = 0; i < WBasicLoopCount; i++)
-        {
-            HitRangeInfo hitRangeInfo = new HitRangeInfo();
-            hitRangeInfo.SetCircleFollowTarget(transform, m_WSkillRadius, m_WBasicLoopDelay);
-            HitRange.Create(in hitRangeInfo);
+        m_W2Skill.CooldownSet(0.5f);
 
-            WSkillHit(in hitRangeInfo, in m_WBasicSkill.dmg);
-            if(i== WBasicLoopCount - 1)
-            {
-                break;
-            }
-            await Util.WaitDelay(m_WBasicLoopDelay, cts);
-            if (cts.IsCancellationRequested)
-            {
-                return;
-            }
-        }
-        m_WBasicCasting = false;
-        m_IsSkill = false;
-        Debug.Log("WBasicEnd");
+        //for (int i = 0; i < WBasicLoopCount; i++)
+        //{
+        //    HitRangeInfo hitRangeInfo = new HitRangeInfo();
+        //    hitRangeInfo.SetCircleFollowTarget(transform, m_WSkillRadius, m_WBasicLoopDelay);
+        //    HitRange.Create(in hitRangeInfo);
+
+        //    WSkillHit(in hitRangeInfo, in m_WBasicSkill.dmg);
+        //    if(i== WBasicLoopCount - 1)
+        //    {
+        //        break;
+        //    }
+        //    await Util.WaitDelay(m_WBasicLoopDelay, cts);
+        //    if (cts.IsCancellationRequested)
+        //    {
+        //        return;
+        //    }
+        //}
     }
 
     async UniTaskVoid WSecondSkill(CancellationTokenSource cts)
     {
-        Debug.Log("WSecondStart");
-
+        SkillData skillData = m_W2Skill.GetSkillData();
         m_IsSkill = true;
         //이동불가
         //목표지정불가
         HitRangeInfo hitRangeInfo = new HitRangeInfo();
-        hitRangeInfo.SetCircleFollowTarget(transform, m_WSkillRadius, m_WSecondAnimTime);
+        hitRangeInfo.SetCircleFollowTarget(transform, m_WSkillRadius, m_W2AttackTime);
         HitRange.Create(in hitRangeInfo);
-        await Util.WaitDelay(m_WSecondAnimTime, cts);
+        await Util.WaitDelay(m_W2AttackTime, cts);
         if (cts.IsCancellationRequested)
         {
             return;
         }
-        WSkillHit(in hitRangeInfo, in m_WSecondSkill.dmg);
-        Debug.Log("WSecondEnd");
+        SkillAttackInfo attackInfo = new SkillAttackInfo(this, skillData);
+        WSkillHit(in hitRangeInfo, in attackInfo);
+
+        float remainingTime = m_W2TotalAnimTime - m_W2AttackTime;
+        await Util.WaitDelay(remainingTime, cts);
+        if (cts.IsCancellationRequested)
+        {
+            return;
+        }
+        m_IsSkill = false;
     }
     #endregion
     public override void CancelSkill()

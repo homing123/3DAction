@@ -20,7 +20,7 @@ using System;
 [System.Serializable]
 public class Status : MonoBehaviour
 {
-    public readonly static float[] LevelEXP = new float[19] { 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 };
+    readonly static float[] LevelEXP = new float[19] { 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 };
     //여러가지 상태가 정의될거임 하지만 행동은 움직임, 스킬시전 2개뿐임
     //현재 상태정의에 따른 움직임, 스킬시전 가능여부를 항상체크해야함
 
@@ -266,5 +266,16 @@ public class Status : MonoBehaviour
     public float CalcSkillDamage(SkillData skillData, int damageIdx = 0)
     {
         return m_TotalSkillDmg * skillData.SDMulDamages[damageIdx] + skillData.Damages[damageIdx];
+    }
+    public float GetLevelUpEXP()
+    {
+        if(m_Level < 19)
+        {
+            return LevelEXP[m_Level];
+        }
+        else
+        {
+            return 0;
+        }
     }
 }

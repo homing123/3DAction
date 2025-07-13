@@ -11,7 +11,7 @@ public class UI_Cheat : MonoBehaviour
             return;
         }
         float curEXP = character.m_Status.m_EXP;
-        float remainingEXP = Status.LevelEXP[curLevel] - curEXP;
+        float remainingEXP = character.m_Status.GetLevelUpEXP() - curEXP;
         character.m_Status.AddEXP(remainingEXP);
     }
 }

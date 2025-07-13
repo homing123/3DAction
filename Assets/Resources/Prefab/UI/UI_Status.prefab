@@ -1339,6 +1339,7 @@ GameObject:
   - component: {fileID: 1327411814301593014}
   - component: {fileID: 327798494117374671}
   - component: {fileID: 1310803430268883179}
+  - component: {fileID: 1057176929611779950}
   m_Layer: 5
   m_Name: UI_Status
   m_TagString: Untagged
@@ -1411,6 +1412,26 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &1057176929611779950
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7155982842535473561}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36107b8d1ba25d94ea08cc66e582dbbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  T_AD: {fileID: 4025100005578582001}
+  T_SD: {fileID: 938014599757785826}
+  T_AttackDmgMul: {fileID: 8638824899606796460}
+  T_Defense: {fileID: 489663425416965029}
+  T_AttackSpeed: {fileID: 6703356415913627935}
+  T_SkillCooldown: {fileID: 4062384150056675506}
+  T_CriticalPer: {fileID: 5269836421216591450}
+  T_MoveSpeed: {fileID: 7395018547713102793}
 --- !u!1 &7679644481053535376
 GameObject:
   m_ObjectHideFlags: 0

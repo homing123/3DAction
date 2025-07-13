@@ -30,6 +30,7 @@ public class ResM : SingleM<ResM>
 
         if (D_Sprite[path] == null)
         {
+            Debug.Log($"Sprite {path} is null");
             return null;
         }
         return D_Sprite[path];
@@ -43,6 +44,7 @@ public class ResM : SingleM<ResM>
 
         if (D_Prefab[path] == null)
         {
+            Debug.Log($"Prefab {path} is null");
             return null;
         }
         return D_Prefab[path];

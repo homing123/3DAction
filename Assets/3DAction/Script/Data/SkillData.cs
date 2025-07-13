@@ -35,13 +35,13 @@ public enum SkillState
 }
 public enum SkillPos
 {
-    Q,
-    W,
-    E,
-    R,
-    P,
-    Weapon,
-    Spell
+    Q = 0,
+    W = 1, 
+    E = 2,
+    R = 3,
+    P = 4,
+    Weapon = 5,
+    Spell = 6,
 }
 
 public struct SkillAttackInfo
@@ -71,6 +71,11 @@ public class CharacterSkill
     }
     public void LevelUp()
     {
+        int maxLevel = GetMaxLevel();
+        if(skillLevel == maxLevel)
+        {
+            return;
+        }
         skillLevel++;
     }
     public void CooldownSet(float cooldownSetValue)
@@ -117,7 +122,7 @@ public class CharacterSkill
         }
         else
         {
-            return skillDatas[skillLevel];
+            return skillDatas[skillLevel - 1];
         }
     }
     public int GetMaxLevel()

@@ -314,6 +314,15 @@ public abstract class Character : Bio
             OnInitialized += action;
         }
     }
+    public virtual void SkillLevelUp(SkillPos skillPos)
+    {
+        if(m_Status.m_SkillLevelUpPoint > 0)
+        {           
+            m_Status.UseSkillLevelUpPoint();
+            D_CharacterSkill[skillPos].LevelUp();
+        }
+    }
+    
     protected abstract bool TryUseSkill(KeyCode key);
     protected abstract bool TryAttack();
     public abstract float GetAttackRange();

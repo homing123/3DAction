@@ -317,4 +317,18 @@ public class Vanya : Character
         }
     }
     #endregion
+
+    public override void SkillLevelUp(SkillPos skillPos)
+    {
+        if (m_Status.m_SkillLevelUpPoint > 0)
+        {
+            if (skillPos == SkillPos.W)
+            {
+                m_W2Skill.LevelUp();
+            }
+            m_Status.UseSkillLevelUpPoint();
+            D_CharacterSkill[skillPos].LevelUp();
+        }
+       
+    }
 }

@@ -21,7 +21,6 @@ public class Vanya : Character
     [SerializeField] Vanya_R m_VanyaRPrefab;
     [SerializeField] Transform m_VanyaQStartPos;
 
-    Dictionary<SkillPos, CharacterSkill> D_CharacterSkill;
     CharacterSkill m_W2Skill;
     [Header("Attack")]
     [SerializeField] float m_AttackPreDelay;
@@ -48,20 +47,19 @@ public class Vanya : Character
     Action OnWKeyInput;
 
 
-    protected override void Start()
+    protected override void Awake()
     {
-        base.Start();
+        base.Awake(); 
         D_CharacterSkill = new Dictionary<SkillPos, CharacterSkill>(7);
         D_CharacterSkill[SkillPos.Q] = new CharacterSkill(QSkillID);
         D_CharacterSkill[SkillPos.W] = new CharacterSkill(WSkillID);
         D_CharacterSkill[SkillPos.E] = new CharacterSkill(ESkillID);
         D_CharacterSkill[SkillPos.R] = new CharacterSkill(RSkillID);
-        D_CharacterSkill[SkillPos.P] = new CharacterSkill(P1SkillID);
+        D_CharacterSkill[SkillPos.P] = new CharacterSkill(P2SkillID);
         D_CharacterSkill[SkillPos.Weapon] = new CharacterSkill(WeaponSkill.GetWeaponSkillID(WeaponType.Arcana));
         D_CharacterSkill[SkillPos.Spell] = new CharacterSkill(SpellSkill.GetSpellSkillID(SpellType.Artifact));
 
         m_W2Skill = new CharacterSkill(W2SkillID);
-
     }
     protected override void Update()
     {

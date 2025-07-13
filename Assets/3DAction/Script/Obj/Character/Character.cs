@@ -1,5 +1,6 @@
+using System.Collections.Generic;
 using System.Threading;
-using Unity.VisualScripting;
+using System;
 using UnityEngine;
 using static UnityEditor.PlayerSettings;
 
@@ -18,7 +19,6 @@ public enum CharacterAction
 }
 public abstract class Character : Bio
 {
-    public static Character PlayerCharacter;
     [Tooltip("어택땅 찍었을 때 찍은곳 주변의 적을 찾는 범위 반지름")] const float AttackDestiSearchRange = 8;
     protected CharacterMove m_Move;
 
@@ -33,16 +33,20 @@ public abstract class Character : Bio
     public Vector3 m_LastMoveDis { get; private set; }
     float m_CurAttackDelay;
 
+    protected Dictionary<SkillPos, CharacterSkill> D_CharacterSkill;
     public bool m_IsSkill { get; protected set; }
     public bool m_IsAttack { get; protected set; }
 
     protected CancellationTokenSource m_SkillCTS;
     protected CancellationTokenSource m_AttackCTS;
+
+    bool m_isInit;
+    Action OnInitialized;
+
     protected override void Awake()
     {
         base.Awake();
-        Debug.Log("플레이어넣음");
-        PlayerCharacter = this;
+        PlayerM.Ins.RegisterCharacter(this);
         m_BioType = Bio_Type.Character;
         m_Move = GetComponent<CharacterMove>();
         m_CharacterAction = CharacterAction.Stop;
@@ -54,6 +58,8 @@ public abstract class Character : Bio
         PlayerInput.Ins.OnInput += OnInput;
         m_CharacterData = CharacterData.GetData(m_CharacterID);
         m_Status.CharacterStatusInit(m_CharacterData);
+        m_isInit = true;
+        OnInitialized?.Invoke();
     }
     protected override void Update()
     {
@@ -74,8 +80,11 @@ public abstract class Character : Bio
     }
     private void OnDrawGizmos()
     {
-        Gizmos.color = new Color(0, 0.5f, 0, 0.5f);
-        Gizmos.DrawSphere(transform.position, GetAttackRange());
+        if (Application.isPlaying)
+        {
+            Gizmos.color = new Color(0, 0.5f, 0, 0.5f);
+            Gizmos.DrawSphere(transform.position, GetAttackRange());
+        }
     }
 
     void OnInput(InputInfo info)
@@ -289,6 +298,21 @@ public abstract class Character : Bio
     public void SetTeamID(int teamid)
     {
         m_TeamID = teamid;
+    }
+    public CharacterSkill GetCharacterSkill(SkillPos skillPos)
+    {
+        return D_CharacterSkill[skillPos];
+    }
+    public void RegisterInitialized(Action action)
+    {
+        if(m_isInit)
+        {
+            action();
+        }
+        else
+        {
+            OnInitialized += action;
+        }
     }
     protected abstract bool TryUseSkill(KeyCode key);
     protected abstract bool TryAttack();

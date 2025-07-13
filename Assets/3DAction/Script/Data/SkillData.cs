@@ -120,6 +120,10 @@ public class CharacterSkill
             return skillDatas[skillLevel];
         }
     }
+    public int GetMaxLevel()
+    {
+        return skillDatas.Length;
+    }
 }
 [System.Serializable]
 public class SkillData
@@ -207,6 +211,7 @@ public class SkillData
         {
             return D_Data[id];
         }
+        Debug.Log($"SkillData {id} is null");
         return null;
     }
 }

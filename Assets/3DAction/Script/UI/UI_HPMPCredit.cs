@@ -11,28 +11,30 @@ public class UI_HPMPCredit : MonoBehaviour
     [SerializeField] TextMeshProUGUI T_MP;
     [SerializeField] TextMeshProUGUI T_Credit;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
+    Character m_PlayerCharacter;
 
     void Start()
     {
-        SetHPMP();
-        SetCredit();
-        Character.PlayerCharacter.m_Status.OnStatusChanged += SetHPMP;
+        m_PlayerCharacter = PlayerM.Ins.GetPlayerCharacter();
+        m_PlayerCharacter.m_Status.OnStatusChanged += SetHPMP;
+
+        m_PlayerCharacter.RegisterInitialized(SetHPMP);
     }
     void OnDestroy()
     {
-        Character.PlayerCharacter.m_Status.OnStatusChanged -= SetHPMP;
+        m_PlayerCharacter.m_Status.OnStatusChanged -= SetHPMP;
     }
     void SetHPMP()
     {
-        if(Character.PlayerCharacter ==null)
+        if(m_PlayerCharacter == null)
         {
             Debug.Log("플레이어없");
         }
-        if(Character.PlayerCharacter.m_Status == null)
+        if(m_PlayerCharacter.m_Status == null)
         {
             Debug.Log("스테이터스 없");
         }
-        Status playerStatus = Character.PlayerCharacter.m_Status;
+        Status playerStatus = m_PlayerCharacter.m_Status;
         float maxHP = playerStatus.m_TotalMaxHP;
         float curHP = playerStatus.m_CurHP;
         float maxMP = playerStatus.m_TotalMaxMP;

@@ -20,6 +20,7 @@ using System;
 [System.Serializable]
 public class Status : MonoBehaviour
 {
+    public readonly static float[] LevelEXP = new float[19] { 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 };
     //여러가지 상태가 정의될거임 하지만 행동은 움직임, 스킬시전 2개뿐임
     //현재 상태정의에 따른 움직임, 스킬시전 가능여부를 항상체크해야함
 
@@ -61,7 +62,7 @@ public class Status : MonoBehaviour
 
     public float m_EXP { get; private set; }
     public int m_Level { get; private set; }
-
+    public int m_SkillLevelUpPoint { get; private set; }
     State m_State;
     public float HPPercent { get { return m_CurHP / m_TotalMaxHP; } }
 
@@ -69,6 +70,8 @@ public class Status : MonoBehaviour
     public event Action OnStatusChanged;
     public event Action<float> OnGetDamage; // 데미지 받은 이벤트
     public event Action<State, State> OnStateChanged; //STATE_1 = xor 이전과 달라진 비트 => 1, STATE_2 = 현재STATE => m_State
+    public event Action OnEXPLevelChanged;
+    public event Action OnSkillLevelUpPointChanged;
 
     CharacterData m_CharacterData;
 
@@ -132,6 +135,7 @@ public class Status : MonoBehaviour
     public void CharacterStatusInit(CharacterData characterData)
     {
         m_Level = 0;
+        m_SkillLevelUpPoint = 1;
         //캐릭터 스테이터스
         m_CharacterData = characterData;
         CalculateTotalStatus();
@@ -145,9 +149,30 @@ public class Status : MonoBehaviour
         m_CurHP = m_TotalMaxHP;
         OnStatusChanged?.Invoke();
     }
-    public void LevelUp()
+    public void AddEXP(float exp)
     {
-
+        m_EXP += exp;
+        if(m_Level >= 19)
+        {
+            return;
+        }
+        while(m_EXP >= LevelEXP[m_Level])
+        {
+            m_EXP -= LevelEXP[m_Level];
+            m_Level++;
+            m_SkillLevelUpPoint++;
+            if(m_Level>=19)
+            {
+                return;
+            }
+        }
+        OnEXPLevelChanged?.Invoke();
+        OnSkillLevelUpPointChanged?.Invoke();
+    }
+    public void UseSkillLevelUpPoint()
+    {
+        m_SkillLevelUpPoint--;
+        OnSkillLevelUpPointChanged?.Invoke();
     }
 
    

@@ -32,7 +32,7 @@ public class UI_SkillIcon : MonoBehaviour
     {
         m_CharacterSkill = characterSkill;
         SkillData skillData = m_CharacterSkill.GetSkillData();
-        m_SkillIcon.sprite = Resources.Load<Sprite>(skillData.IconPath);
+        m_SkillIcon.sprite = ResM.Ins.GetSprite(skillData.IconPath);
         switch(pos)
         {
             case SkillPos.Q:

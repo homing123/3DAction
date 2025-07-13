@@ -47,9 +47,9 @@ public class Vanya : Character
     Action OnWKeyInput;
 
 
-    protected override void Awake()
+    protected override void Start()
     {
-        base.Awake(); 
+        base.Start();
         D_CharacterSkill = new Dictionary<SkillPos, CharacterSkill>(7);
         D_CharacterSkill[SkillPos.Q] = new CharacterSkill(QSkillID);
         D_CharacterSkill[SkillPos.W] = new CharacterSkill(WSkillID);
@@ -60,6 +60,8 @@ public class Vanya : Character
         D_CharacterSkill[SkillPos.Spell] = new CharacterSkill(SpellSkill.GetSpellSkillID(SpellType.Artifact));
 
         m_W2Skill = new CharacterSkill(W2SkillID);
+        m_isInit = true;
+        OnInitialized?.Invoke();
     }
     protected override void Update()
     {

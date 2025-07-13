@@ -18,12 +18,36 @@ public class ResM : SingleM<ResM>
     [Header("Projectile")]
     public Projectile Proj_Rock;
 
-    [System.Serializable]
-    class SpriteAndKey
+    Dictionary<string, Sprite> D_Sprite = new Dictionary<string, Sprite>();
+    Dictionary<string, GameObject> D_Prefab = new Dictionary<string, GameObject>();
+
+    public Sprite GetSprite(string path)
     {
-        public int key;
-        public Sprite sprite;
+        if(D_Sprite.ContainsKey(path) == false)
+        {
+            D_Sprite[path] = Resources.Load<Sprite>(path);
+        }
+
+        if (D_Sprite[path] == null)
+        {
+            return null;
+        }
+        return D_Sprite[path];
     }
+    public GameObject GetPrefab(string path)
+    {
+        if (D_Prefab.ContainsKey(path) == false)
+        {
+            D_Prefab[path] = Resources.Load<GameObject>(path);
+        }
+
+        if (D_Prefab[path] == null)
+        {
+            return null;
+        }
+        return D_Prefab[path];
+    }
+
 
 
 }

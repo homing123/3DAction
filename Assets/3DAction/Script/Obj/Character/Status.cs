@@ -115,11 +115,11 @@ public class Status : MonoBehaviour
         switch (m_Bio.m_BioType)
         {
             case Bio_Type.Character:
-                m_TotalMaxHP = m_CharacterData.HP[0];
-                m_TotalMaxMP = m_CharacterData.MP[0];
-                m_TotalArmor = m_CharacterData.Armor[0];
-                m_TotalDmg = m_CharacterData.Dmg[0];
-                m_TotalAttackSpeed = m_CharacterData.AttackSpeed[0];
+                m_TotalMaxHP = m_CharacterData.HP[m_Level];
+                m_TotalMaxMP = m_CharacterData.MP[m_Level];
+                m_TotalArmor = m_CharacterData.Armor[m_Level];
+                m_TotalDmg = m_CharacterData.Dmg[m_Level];
+                m_TotalAttackSpeed = m_CharacterData.AttackSpeed[m_Level];
 
                 m_TotalSkillDmg = m_CharacterData.SkillDmg;
                 m_TotalSkillCooldown = m_CharacterData.SkillCooldown;
@@ -151,6 +151,7 @@ public class Status : MonoBehaviour
     }
     public void AddEXP(float exp)
     {
+        int lastLevel = m_Level;
         m_EXP += exp;
         if(m_Level >= 19)
         {
@@ -165,6 +166,11 @@ public class Status : MonoBehaviour
             {
                 return;
             }
+        }
+        if (m_Level != lastLevel)
+        {
+            CalculateTotalStatus();
+            OnStatusChanged?.Invoke();
         }
         OnEXPLevelChanged?.Invoke();
         OnSkillLevelUpPointChanged?.Invoke();

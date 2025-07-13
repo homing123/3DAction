@@ -29,7 +29,8 @@ public class Bio : MonoBehaviour
     public Status m_Status { get; private set; }
     public Bio_Type m_BioType { get; protected set; }
 
-
+    protected bool m_isInit;
+    protected Action OnInitialized;
     protected virtual void Awake()
     {
         m_Status = GetComponent<Status>();
@@ -143,7 +144,17 @@ public class Bio : MonoBehaviour
             arrived = false;
         }
     }
-
+    public void RegisterInitialized(Action action)
+    {
+        if (m_isInit)
+        {
+            action();
+        }
+        else
+        {
+            OnInitialized += action;
+        }
+    }
     public static bool IsHit(Bio user, Bio target, Skill_Target_Type type)
     {
         if(target.m_BioType == Bio_Type.Sandbag)
@@ -172,6 +183,6 @@ public class Bio : MonoBehaviour
             }
         }
         return false;
-
     }
+
 }

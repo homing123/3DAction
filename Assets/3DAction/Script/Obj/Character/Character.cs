@@ -20,28 +20,25 @@ public enum CharacterAction
 public abstract class Character : Bio
 {
     [Tooltip("어택땅 찍었을 때 찍은곳 주변의 적을 찾는 범위 반지름")] const float AttackDestiSearchRange = 8;
-    protected CharacterMove m_Move;
-
     [SerializeField] int m_CharacterID;
-    protected CharacterData m_CharacterData;
+
     Vector3 m_LastPos;
     CharacterAction m_CharacterAction;
     Transform m_ObjectTarget;
-
-    protected Bio m_AttackTarget;
-    public int m_TeamID { get; private set; }
-    public Vector3 m_LastMoveDis { get; private set; }
     float m_CurAttackDelay;
 
+    protected Bio m_AttackTarget;
     protected Dictionary<SkillPos, CharacterSkill> D_CharacterSkill;
-    public bool m_IsSkill { get; protected set; }
-    public bool m_IsAttack { get; protected set; }
-
     protected CancellationTokenSource m_SkillCTS;
     protected CancellationTokenSource m_AttackCTS;
+    protected CharacterMove m_Move;
 
-    bool m_isInit;
-    Action OnInitialized;
+
+    public CharacterData m_CharacterData { get; private set; }
+    public bool m_IsSkill { get; protected set; }
+    public bool m_IsAttack { get; protected set; }
+    public int m_TeamID { get; private set; }
+    public Vector3 m_LastMoveDis { get; private set; }
 
     protected override void Awake()
     {
@@ -58,8 +55,6 @@ public abstract class Character : Bio
         PlayerInput.Ins.OnInput += OnInput;
         m_CharacterData = CharacterData.GetData(m_CharacterID);
         m_Status.CharacterStatusInit(m_CharacterData);
-        m_isInit = true;
-        OnInitialized?.Invoke();
     }
     protected override void Update()
     {
@@ -302,17 +297,6 @@ public abstract class Character : Bio
     public CharacterSkill GetCharacterSkill(SkillPos skillPos)
     {
         return D_CharacterSkill[skillPos];
-    }
-    public void RegisterInitialized(Action action)
-    {
-        if(m_isInit)
-        {
-            action();
-        }
-        else
-        {
-            OnInitialized += action;
-        }
     }
     public virtual void SkillLevelUp(SkillPos skillPos)
     {

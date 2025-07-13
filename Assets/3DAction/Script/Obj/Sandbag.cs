@@ -13,6 +13,8 @@ public class Sandbag : Bio
     {
         base.Start();
         m_Status.SandbagStatusInit();
+        m_isInit = true;
+        OnInitialized?.Invoke();
     }
     protected override void Update()
     {

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 public class UI_HPBar : MonoBehaviour
 {
     const float HPBarBGWidth = 248;
-    [SerializeField] TextMeshProUGUI T_Name;
+    [SerializeField] TextHandler T_Name;
     [SerializeField] TextMeshProUGUI T_Level;
     [SerializeField] Image m_HPBarcodePrefab;
     [SerializeField] Image m_HPBarcodeWhitePrefab;
@@ -22,17 +22,32 @@ public class UI_HPBar : MonoBehaviour
     Camera m_MainCam;
     float m_CurTotalFillAmount;
     float m_WhiteCurTotalFillAmount;
+    Character m_Character;
+    Sandbag m_Sandbag;
     private void Start()
     {
         m_MainCam = Camera.main;
         m_Target.m_Status.OnStatusChanged += SetStatus;
-        SetStatus();
+        m_Target.m_Status.OnEXPLevelChanged += SetLevel;
+        switch(m_Target.m_BioType)
+        {
+            case Bio_Type.Character:
+                m_Character = m_Target as Character;
+                m_Character.RegisterInitialized(Setting);
+                break;
+            case Bio_Type.Sandbag:
+                m_Sandbag = m_Target as Sandbag;
+                m_Sandbag.RegisterInitialized(Setting);
+
+                break;
+        }
     }
 
 
     private void OnDestroy()
     {
         m_Target.m_Status.OnStatusChanged -= SetStatus;
+        m_Target.m_Status.OnEXPLevelChanged -= SetLevel;
     }
 
     private void Update()
@@ -42,6 +57,24 @@ public class UI_HPBar : MonoBehaviour
             UpdatePosition();
             SetHPBarcodeWitheFillAmount();
         }
+    }
+    void Setting()
+    {
+        switch (m_Target.m_BioType)
+        {
+            case Bio_Type.Character:
+                T_Name.SetTextID(m_Character.m_CharacterData.Name);
+                break;
+            case Bio_Type.Sandbag:
+                T_Name.SetText("Sandbag");
+                break;
+        }
+        SetStatus();
+        SetLevel();
+    }
+    void SetLevel()
+    {
+        T_Level.text = (m_Target.m_Status.m_Level + 1).ToString();
     }
     void SetStatus()
     {

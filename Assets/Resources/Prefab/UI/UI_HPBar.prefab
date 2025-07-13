@@ -86,6 +86,7 @@ GameObject:
   - component: {fileID: 5093367867472562688}
   - component: {fileID: 8688221100912563665}
   - component: {fileID: 2114775437641465839}
+  - component: {fileID: 3585881669143237218}
   m_Layer: 5
   m_Name: T_Name
   m_TagString: Untagged
@@ -142,8 +143,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Vanya
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 46fedea1b8ac9514d9f6a40652408368, type: 2}
+  m_sharedMaterial: {fileID: 6906156758592672766, guid: 46fedea1b8ac9514d9f6a40652408368, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -173,7 +174,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 1
+  m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -211,6 +212,22 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &3585881669143237218
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2757814255494287612}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d66204fa68067b344ab1a409f99ec387, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Text: {fileID: 2114775437641465839}
+  m_TextType: 0
+  m_ID: 0
+  m_String: 
 --- !u!1 &2804848014042348772
 GameObject:
   m_ObjectHideFlags: 0
@@ -565,7 +582,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c891196d612fa504f9f7f83339518da1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  T_Name: {fileID: 2114775437641465839}
+  T_Name: {fileID: 3585881669143237218}
   T_Level: {fileID: 3705145724796358859}
   m_HPBarcodePrefab: {fileID: 7043667713456329129}
   m_HPBarcodeWhitePrefab: {fileID: 4279184278361232509}

@@ -19,6 +19,13 @@ public class UI_EXPBarLevel : MonoBehaviour
         T_Level.text = (m_Character.m_Status.m_Level + 1).ToString();
         float levelUpEXP = m_Character.m_Status.GetLevelUpEXP();
         float curEXP = m_Character.m_Status.m_EXP;
-        I_EXPBar.fillAmount = curEXP / levelUpEXP;
+        if (levelUpEXP == 0)
+        {
+            I_EXPBar.fillAmount = 0;
+        }
+        else
+        {
+            I_EXPBar.fillAmount = curEXP / levelUpEXP;
+        }
     }
 }

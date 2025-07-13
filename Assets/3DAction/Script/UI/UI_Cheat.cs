@@ -14,5 +14,10 @@ public class UI_Cheat : MonoBehaviour
         float remainingEXP = character.m_Status.GetLevelUpEXP() - curEXP;
         character.m_Status.AddEXP(remainingEXP);
     }
+    public void CharacterGetEXP()
+    {
+        Character character = PlayerM.Ins.GetPlayerCharacter();
+        character.m_Status.AddEXP(5);
+    }
 }
 

@@ -67,6 +67,18 @@ public class Bio : MonoBehaviour
     {
 
     }
+    public void AttackOverlap(in HitRangeInfo hitRangeInfo, in SkillAttackInfo dmginfo)
+    {
+        Collider[] hits = HitRange.Overlap(in hitRangeInfo, out int count);
+        for (int i = 0; i < count; i++)
+        {
+            Bio hitBio = hits[i].GetComponent<Bio>();
+            if (Bio.IsHit(this, hitBio, Skill_Target_Type.Enemy | Skill_Target_Type.Monster))
+            {
+                hitBio.GetAttacked(this, in dmginfo, default);
+            }
+        }
+    }
     public void GetAttacked(Bio user, in SkillAttackInfo skillAttackInfo, Vector3 knockbackValue)
     {
         Vector3 knockbackDir = default;

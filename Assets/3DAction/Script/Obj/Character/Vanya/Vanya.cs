@@ -51,15 +51,15 @@ public class Vanya : Character
     {
         base.Start();
         D_CharacterSkill = new Dictionary<SkillPos, CharacterSkill>(7);
-        D_CharacterSkill[SkillPos.Q] = new CharacterSkill(QSkillID);
-        D_CharacterSkill[SkillPos.W] = new CharacterSkill(WSkillID);
-        D_CharacterSkill[SkillPos.E] = new CharacterSkill(ESkillID);
-        D_CharacterSkill[SkillPos.R] = new CharacterSkill(RSkillID);
-        D_CharacterSkill[SkillPos.P] = new CharacterSkill(P2SkillID);
-        D_CharacterSkill[SkillPos.Weapon] = new CharacterSkill(WeaponSkill.GetWeaponSkillID(WeaponType.Arcana));
-        D_CharacterSkill[SkillPos.Spell] = new CharacterSkill(SpellSkill.GetSpellSkillID(SpellType.Artifact));
+        D_CharacterSkill[SkillPos.Q] = new CharacterSkill(QSkillID, this);
+        D_CharacterSkill[SkillPos.W] = new CharacterSkill(WSkillID, this);
+        D_CharacterSkill[SkillPos.E] = new CharacterSkill(ESkillID, this);
+        D_CharacterSkill[SkillPos.R] = new CharacterSkill(RSkillID, this);
+        D_CharacterSkill[SkillPos.P] = new CharacterSkill(P2SkillID, this);
+        D_CharacterSkill[SkillPos.Weapon] = new CharacterSkill(WeaponSkill.GetWeaponSkillID(WeaponType.Arcana), this);
+        D_CharacterSkill[SkillPos.Spell] = new CharacterSkill(SpellSkill.GetSpellSkillID(SpellType.Artifact), this);
 
-        m_W2Skill = new CharacterSkill(W2SkillID);
+        m_W2Skill = new CharacterSkill(W2SkillID, this);
         m_isInit = true;
         OnInitialized?.Invoke();
     }
@@ -69,10 +69,8 @@ public class Vanya : Character
         foreach(SkillPos skillPos in D_CharacterSkill.Keys)
         {
             D_CharacterSkill[skillPos].CooldownReduction(Time.deltaTime);
-            D_CharacterSkill[skillPos].CheckState(this);
         }
         m_W2Skill.CooldownReduction(Time.deltaTime);
-        m_W2Skill.CheckState(this);
     }
 
     #region Attack
@@ -224,18 +222,6 @@ public class Vanya : Character
     #endregion
     #region WSkill
 
-    void WSkillHit(in HitRangeInfo hitRangeInfo, in SkillAttackInfo dmginfo)
-    {
-        Collider[] hits = HitRange.Overlap(in hitRangeInfo, out int count);
-        for(int i=0;i<count;i++)
-        {
-            Bio hitBio = hits[i].GetComponent<Bio>();
-            if (Bio.IsHit(this, hitBio, Skill_Target_Type.Enemy | Skill_Target_Type.Monster))
-            {
-                hitBio.GetAttacked(this, in dmginfo, default);
-            }
-        }
-    }
     void WSkillCancelAndW2SkillCasting()
     {
         CancelSkill();
@@ -260,28 +246,10 @@ public class Vanya : Character
         }
         Vanya_W vanyaW = Instantiate(m_VanyaWPrefab);
         //이속증가
-        vanyaW.Setting(this, skillData, WSkillEnd);    
+        vanyaW.Setting(this, skillData, m_WSkillRadius, WSkillEnd);    
         OnWKeyInput += WSkillCancelAndW2SkillCasting;
         m_IsSkill = false;
         m_W2Skill.CooldownSet(0.5f);
-
-        //for (int i = 0; i < WBasicLoopCount; i++)
-        //{
-        //    HitRangeInfo hitRangeInfo = new HitRangeInfo();
-        //    hitRangeInfo.SetCircleFollowTarget(transform, m_WSkillRadius, m_WBasicLoopDelay);
-        //    HitRange.Create(in hitRangeInfo);
-
-        //    WSkillHit(in hitRangeInfo, in m_WBasicSkill.dmg);
-        //    if(i== WBasicLoopCount - 1)
-        //    {
-        //        break;
-        //    }
-        //    await Util.WaitDelay(m_WBasicLoopDelay, cts);
-        //    if (cts.IsCancellationRequested)
-        //    {
-        //        return;
-        //    }
-        //}
     }
 
     async UniTaskVoid WSecondSkill(CancellationTokenSource cts)
@@ -299,7 +267,7 @@ public class Vanya : Character
             return;
         }
         SkillAttackInfo attackInfo = new SkillAttackInfo(this, skillData);
-        WSkillHit(in hitRangeInfo, in attackInfo);
+        AttackOverlap(in hitRangeInfo, in attackInfo);
 
         float remainingTime = m_W2TotalAnimTime - m_W2AttackTime;
         await Util.WaitDelay(remainingTime, cts);

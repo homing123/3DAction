@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System;
 public enum SkillType
 {
     WeaponSkill,
@@ -59,15 +60,19 @@ public struct SkillAttackInfo
 
 public class CharacterSkill
 {
+    public Character user;
     public SkillData[] skillDatas { get; private set; }
     public float skillCooldown { get; private set; }
     public int skillLevel { get; private set; }
     public SkillState skillState { get; private set; }
-    public CharacterSkill(int id)
+    public event Action OnUpdated;
+    public CharacterSkill(int id, Character character)
     {
+        user = character;
         skillDatas = SkillData.GetData(id);
         skillLevel = 0;
         skillCooldown = 0;
+        CheckState();
     }
     public void LevelUp()
     {
@@ -77,27 +82,46 @@ public class CharacterSkill
             return;
         }
         skillLevel++;
+        CheckState();
+        OnUpdated?.Invoke();
     }
     public void CooldownSet(float cooldownSetValue)
     {
-        skillCooldown = cooldownSetValue;
+        if (skillCooldown != cooldownSetValue)
+        {
+            skillCooldown = cooldownSetValue;
+            CheckState();
+            OnUpdated?.Invoke();
+        }
     }
     public void CooldownSet(SkillData skillData)
     {
+        float lastskillCooldown = skillCooldown;
         skillCooldown = skillData.Cooldown;
+        if (lastskillCooldown != skillCooldown)
+        {
+            CheckState();
+            OnUpdated?.Invoke();
+        }
     }
     public void CooldownReduction(float reductionTime)
     {
+        float lastskillCooldown = skillCooldown;
         skillCooldown -= reductionTime;
         skillCooldown = skillCooldown < 0 ? 0 : skillCooldown;
+        if(lastskillCooldown != skillCooldown)
+        {
+            CheckState();
+            OnUpdated?.Invoke();
+        }
     }
-    public void CheckState(Character character)
+    void CheckState()
     {
         if (skillLevel == 0)
         {
             skillState = SkillState.Level0;
         }
-        else if (character.m_Status.Skillable() == false || character.m_IsSkill)
+        else if (user.m_Status.Skillable() == false || user.m_IsSkill)
         {
             skillState = SkillState.CharacterStateUnUseableSkill;
         }
@@ -105,7 +129,7 @@ public class CharacterSkill
         {
             skillState = SkillState.Cooldown;
         }
-        else if (skillDatas[skillLevel - 1].MPValue > character.m_Status.m_CurMP)
+        else if (skillDatas[skillLevel - 1].MPValue > user.m_Status.m_CurMP)
         {
             skillState = SkillState.NotEnoughMP;
         }

@@ -33,7 +33,8 @@ public class UI_SkillIcon : MonoBehaviour
         m_CharacterSkill = characterSkill;
         SkillData skillData = m_CharacterSkill.GetSkillData();
         m_SkillIcon.sprite = ResM.Ins.GetSprite(skillData.IconPath);
-        switch(pos)
+        SetSkillStateCooldown();
+        switch (pos)
         {
             case SkillPos.Q:
                 T_Key.text = "Q";
@@ -58,8 +59,10 @@ public class UI_SkillIcon : MonoBehaviour
                 break;
         }
 
+        m_CharacterSkill.OnUpdated += SetSkillStateCooldown;
+
     }
-    
+
     void SetSkillLevel()
     {
         if (m_SkillLevelEnables.Length > 0)
@@ -91,7 +94,7 @@ public class UI_SkillIcon : MonoBehaviour
         }
     }
 
-    private void Update()
+    private void SetSkillStateCooldown()
     {
         SkillData skillData = m_CharacterSkill.GetSkillData();
 

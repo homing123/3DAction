@@ -8,22 +8,24 @@ public class Vanya_W : MonoBehaviour
     [SerializeField] float m_Height;
     Vanya m_User;
     SkillData m_SkillData;
-    Action ac_WSkillEnd;
     float m_Radius;
 
     int m_AttackCount;
     float m_CurTime;
     SkillAttackInfo m_SkillAttackInfo;
     HitRangeInfo m_HitRangeInfo;
-    public void Setting(Vanya user, SkillData skillData, float radius, Action wSkillEnd)
+    HitRange m_HitRange;
+    Action ac_WEnd;
+    bool m_IsDestroy;
+    public void Setting(Vanya user, SkillData skillData, float radius, Action ac_wend)
     {
         m_User = user;
         m_SkillData = skillData;
         m_Radius = radius;
-        ac_WSkillEnd = wSkillEnd;
         m_SkillAttackInfo = new SkillAttackInfo(m_User, m_SkillData);
         m_HitRangeInfo = new HitRangeInfo();
         m_HitRangeInfo.SetCircleFollowTarget(m_User.transform, m_Radius, LoopDelay);
+        ac_WEnd = ac_wend;
     }
     private void Start()
     {
@@ -31,6 +33,10 @@ public class Vanya_W : MonoBehaviour
     }
     private void Update()
     {
+        if(m_IsDestroy)
+        {
+            return;
+        }
         transform.position = m_User.transform.position;
 
         m_CurTime += Time.deltaTime;
@@ -41,12 +47,12 @@ public class Vanya_W : MonoBehaviour
             Attack();
             if(m_AttackCount == LoopCount)
             {
-                ac_WSkillEnd?.Invoke();
+                ac_WEnd?.Invoke();
                 Destroy();
             }
             else
             {
-                HitRange.Create(in m_HitRangeInfo);
+                m_HitRange = HitRange.Create(in m_HitRangeInfo);
             }
         }
     }
@@ -54,9 +60,13 @@ public class Vanya_W : MonoBehaviour
     {
         m_User.AttackOverlap(in m_HitRangeInfo, in m_SkillAttackInfo);
     }
-    public void Cancel()
+    public void W2Casting()
     {
-
+        Destroy();
+        if (m_HitRange.gameObject != null)
+        {
+            m_HitRange.Destroy();
+        }
     }
     public void Stop()
     {
@@ -68,7 +78,12 @@ public class Vanya_W : MonoBehaviour
     }
     public void Destroy()
     {
+        m_IsDestroy = true;
         Destroy(this.gameObject);
+        if(m_HitRange.gameObject!= null)
+        {
+            m_HitRange.Destroy();
+        }
     }
 
 }

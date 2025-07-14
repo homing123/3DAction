@@ -15,9 +15,9 @@ public class WeaponSkill
         { WeaponType.Arcana, ArcanaSkillID}
     };
 
-    public static int GetWeaponSkillID(WeaponType weaponType)
+    public static SkillData[] GetWeaponSkillDatas(WeaponType weaponType)
     {
-        return D_WeaponSkillID[weaponType];
+        return SkillData.GetData(D_WeaponSkillID[weaponType]);
     }
 
     

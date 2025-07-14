@@ -63,7 +63,7 @@ public class HitRange : MonoBehaviour
 {
     public const bool CreateHitRange = true;
 
-    public static void Create(in HitRangeInfo info)
+    public static HitRange Create(in HitRangeInfo info)
     {
         switch (info.type)
         {
@@ -74,18 +74,18 @@ public class HitRange : MonoBehaviour
                     hitRange.transform.localScale = new Vector3(info.quadSize.x, hitRange.transform.localScale.y, info.quadSize.y);
                     hitRange.transform.rotation = Quaternion.Euler(0, info.quadRotY, 0);
                     hitRange.m_Info = info;
+                    return hitRange;
                 }
-                break;
             case HitRangeType.Circle:
                 {
                     HitRange hitRange = Instantiate(ResM.Ins.HitRange_Circle).GetComponent<HitRange>();
                     hitRange.transform.position = info.pos;
                     hitRange.transform.localScale = new Vector3(info.circleRadius * 2, info.circleRadius * 2, info.circleRadius * 2);
                     hitRange.m_Info = info;
+                    return hitRange;
                 }
-                break;
         }
-        
+        return null;
     }
     HitRangeInfo m_Info;
     float m_CurTime;
@@ -121,6 +121,10 @@ public class HitRange : MonoBehaviour
         {
             transform.position = m_Info.target.position;
         }
+    }
+    public void Destroy()
+    {
+        Destroy(this.gameObject);
     }
 
     public static Collider[] Overlap(in HitRangeInfo info, out int count)

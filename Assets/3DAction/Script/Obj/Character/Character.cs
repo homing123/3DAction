@@ -17,6 +17,92 @@ public enum CharacterAction
     AttackDesti = 5, //움직이며 타겟서치, 찾으면 ChaseTarget으로 변경
     ChaseTarget = 6, //타겟을 쫓아가며 공격 타겟이 죽거나 없어질경우 멈춤
 }
+
+//skillPos 마다 장착된 캐릭터스킬(스킬레벨, 스킬쿨타임, 현재스킬 상태, 레벨별 스킬데이터, 사용자)
+//현재 skillPos에 장착된 캐릭터 스킬이 변할때 불리는 이벤트
+//현재 skillPos에 해당하는 스킬 시전 액션
+public class SkillPosSkill
+{
+    public Character m_User { get; private set; }
+    public SkillData[] m_SkillDatas { get; private set; }
+    public float m_SkillCooldown { get; private set; }
+    public SkillState m_SkillState { get; private set; }
+    public SkillPos m_SkillPos { get; private set; }
+
+    public event Action OnSkillPosSkillChanged;
+    public Action<CancellationTokenSource, SkillPosSkill> ac_SkillFunction { get; private set; }
+    public SkillPosSkill(Character user, SkillPos skillPos)
+    {
+        m_User = user;
+        m_SkillPos = skillPos;
+    }
+    public void SetSkillFunctionAndSkillDatas(SkillData[] skillDatas, Action<CancellationTokenSource, SkillPosSkill> ac_skillFunction)
+    {
+        m_SkillDatas = skillDatas;
+        ac_SkillFunction = ac_skillFunction;
+    }
+    public void CooldownSet(float cooldownSetValue)
+    {
+        if (m_SkillCooldown != cooldownSetValue)
+        {
+            m_SkillCooldown = cooldownSetValue;
+        }
+    }
+    public void CooldownSet(SkillData skillData)
+    {
+        float skillCool = m_User.m_Status.CalcSkillCooldown(skillData);
+        m_SkillCooldown = skillCool;
+    }
+    public void CooldownReduction(float reductionTime)
+    {
+        float lastskillCooldown = m_SkillCooldown;
+        m_SkillCooldown -= reductionTime;
+        m_SkillCooldown = m_SkillCooldown < 0 ? 0 : m_SkillCooldown;
+    }
+
+    //일단 임시로 매프레임 lateupdate 에서 부르자
+    public void CheckState()
+    {
+        int skillLevel = m_User.m_Status.m_SkillLevel[(int)m_SkillPos];
+        if (skillLevel == 0)
+        {
+            m_SkillState = SkillState.Level0;
+        }
+        else if (m_User.m_Status.Skillable() == false || m_User.m_IsSkill)
+        {
+            m_SkillState = SkillState.CharacterStateUnUseableSkill;
+        }
+        else if (m_SkillCooldown > 0)
+        {
+            m_SkillState = SkillState.Cooldown;
+        }
+        else if (m_SkillDatas[skillLevel - 1].MPValue > m_User.m_Status.m_CurMP)
+        {
+            m_SkillState = SkillState.NotEnoughMP;
+        }
+        else
+        {
+            m_SkillState = SkillState.Useable;
+        }
+        OnSkillPosSkillChanged?.Invoke();
+    }
+    public SkillData GetSkillData()
+    {
+        int skillLevel = m_User.m_Status.m_SkillLevel[(int)m_SkillPos];
+        if (skillLevel == 0)
+        {
+            return m_SkillDatas[0];
+        }
+        else
+        {
+            return m_SkillDatas[skillLevel - 1];
+        }
+    }
+    public int GetMaxLevel()
+    {
+        return m_SkillDatas.Length;
+    }
+}
 public abstract class Character : Bio
 {
     [Tooltip("어택땅 찍었을 때 찍은곳 주변의 적을 찾는 범위 반지름")] const float AttackDestiSearchRange = 8;
@@ -28,11 +114,10 @@ public abstract class Character : Bio
     float m_CurAttackDelay;
 
     protected Bio m_AttackTarget;
-    protected Dictionary<SkillPos, CharacterSkill> D_CharacterSkill;
+    protected Dictionary<SkillPos, SkillPosSkill> D_SkillPosSkill;
     protected CancellationTokenSource m_SkillCTS;
     protected CancellationTokenSource m_AttackCTS;
     protected CharacterMove m_Move;
-
 
     public CharacterData m_CharacterData { get; private set; }
     public bool m_IsSkill { get; protected set; }
@@ -47,6 +132,12 @@ public abstract class Character : Bio
         m_BioType = Bio_Type.Character;
         m_Move = GetComponent<CharacterMove>();
         m_CharacterAction = CharacterAction.Stop;
+        SkillPos[] enumArray = EnumArray<SkillPos>.GetArray();
+        D_SkillPosSkill = new Dictionary<SkillPos, SkillPosSkill>(enumArray.Length);
+        for(int i=0;i<enumArray.Length;i++)
+        {
+            D_SkillPosSkill.Add(enumArray[i], new SkillPosSkill(this, enumArray[i]));
+        }
     }
     protected override void Start()
     {
@@ -60,7 +151,12 @@ public abstract class Character : Bio
     {
         base.Update();
         m_CurAttackDelay += Time.deltaTime;
+        SkillCooldownUpdate();
         CharacterActionUpdate();
+    }
+    protected virtual void LateUpdate()
+    {
+        SkillCheckState();
     }
     private void OnDestroy()
     {
@@ -294,18 +390,33 @@ public abstract class Character : Bio
     {
         m_TeamID = teamid;
     }
-    public CharacterSkill GetCharacterSkill(SkillPos skillPos)
+    protected virtual void SkillCooldownUpdate()
     {
-        return D_CharacterSkill[skillPos];
+        foreach (SkillPos skillPos in D_SkillPosSkill.Keys)
+        {
+            D_SkillPosSkill[skillPos].CooldownReduction(Time.deltaTime);
+        }
+    }
+    protected virtual void SkillCheckState()
+    {
+        foreach (SkillPos skillPos in D_SkillPosSkill.Keys)
+        {
+            D_SkillPosSkill[skillPos].CheckState();
+        }
     }
     public virtual void SkillLevelUp(SkillPos skillPos)
     {
-        if(m_Status.m_SkillLevelUpPoint > 0)
-        {           
-            m_Status.UseSkillLevelUpPoint();
-            D_CharacterSkill[skillPos].LevelUp();
+        if (m_Status.m_SkillLevelUpPoint > 0)
+        {
+            m_Status.UseSkillLevelUpPoint(skillPos);
         }
     }
+
+    public SkillPosSkill GetSkillPosSkill(SkillPos skillPos)
+    {
+        return D_SkillPosSkill[skillPos];
+    }
+   
     
     protected abstract bool TryUseSkill(KeyCode key);
     protected abstract bool TryAttack();

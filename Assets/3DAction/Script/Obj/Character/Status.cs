@@ -63,6 +63,8 @@ public class Status : MonoBehaviour
     public float m_EXP { get; private set; }
     public int m_Level { get; private set; }
     public int m_SkillLevelUpPoint { get; private set; }
+    public int[] m_SkillLevel = new int[7];
+
     State m_State;
     public float HPPercent { get { return m_CurHP / m_TotalMaxHP; } }
 
@@ -175,9 +177,10 @@ public class Status : MonoBehaviour
         OnEXPLevelChanged?.Invoke();
         OnSkillLevelUpPointChanged?.Invoke();
     }
-    public void UseSkillLevelUpPoint()
+    public void UseSkillLevelUpPoint(SkillPos skillPos)
     {
         m_SkillLevelUpPoint--;
+        m_SkillLevel[(int)skillPos]++;
         OnSkillLevelUpPointChanged?.Invoke();
     }
 

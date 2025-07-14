@@ -14,6 +14,7 @@ public class UI_SkillIcon : MonoBehaviour
         {5, new float[5] {-SkillLevelObjectIntervalX * 2f, -SkillLevelObjectIntervalX, 0, SkillLevelObjectIntervalX, SkillLevelObjectIntervalX * 2}},
     };
 
+    [SerializeField] SkillPos m_SkillPos;
     [SerializeField] GameObject m_SkillUnuseable;
     [SerializeField] GameObject m_SkillLevel0;
     [SerializeField] GameObject m_SkillNotEnoughMP;
@@ -27,14 +28,11 @@ public class UI_SkillIcon : MonoBehaviour
     [SerializeField] GameObject m_KeyObj;
     [SerializeField] TextMeshProUGUI T_Key; //패시브 제외
 
-    CharacterSkill m_CharacterSkill;
-    public void Setting(CharacterSkill characterSkill, SkillPos pos)
+    SkillPosSkill m_SkillPosSkill;
+    Character m_PlayerCharacter;
+    private void Start()
     {
-        m_CharacterSkill = characterSkill;
-        SkillData skillData = m_CharacterSkill.GetSkillData();
-        m_SkillIcon.sprite = ResM.Ins.GetSprite(skillData.IconPath);
-        SetSkillStateCooldown();
-        switch (pos)
+        switch (m_SkillPos)
         {
             case SkillPos.Q:
                 T_Key.text = "Q";
@@ -58,17 +56,29 @@ public class UI_SkillIcon : MonoBehaviour
                 T_Key.text = "F";
                 break;
         }
+        m_PlayerCharacter = PlayerM.Ins.GetPlayerCharacter();
+        m_PlayerCharacter.RegisterInitialized(Init);
+    }
+    
+    void Init()
+    {
+        m_SkillPosSkill = m_PlayerCharacter.GetSkillPosSkill(m_SkillPos);
+        m_SkillPosSkill.OnSkillPosSkillChanged += Setting;
+    }
 
-        m_CharacterSkill.OnUpdated += SetSkillStateCooldown;
-
+    void Setting()
+    {
+        m_SkillIcon.sprite = ResM.Ins.GetSprite(m_SkillPosSkill.GetSkillData().IconPath);
+        SetSkillStateCooldown();
+        SetSkillLevel();
     }
 
     void SetSkillLevel()
     {
+        int curLevel = m_PlayerCharacter.m_Status.m_SkillLevel[(int)m_SkillPos];
+        int maxLevel = m_SkillPosSkill.GetMaxLevel();
         if (m_SkillLevelEnables.Length > 0)
         {
-            int curLevel = m_CharacterSkill.skillLevel;
-            int maxLevel = m_CharacterSkill.GetMaxLevel();
             for (int i = 0; i < maxLevel; i++)
             {
                 m_SkillLevelEmpties[i].gameObject.SetActive(true);
@@ -90,13 +100,13 @@ public class UI_SkillIcon : MonoBehaviour
         }
         if(T_SkillLevel != null)
         {
-            T_SkillLevel.text = m_CharacterSkill.skillLevel.ToString();
+            T_SkillLevel.text = curLevel.ToString();
         }
     }
 
     private void SetSkillStateCooldown()
     {
-        SkillData skillData = m_CharacterSkill.GetSkillData();
+        SkillData skillData = m_SkillPosSkill.GetSkillData();
 
         SetSkillLevel();
         if(T_MP!=null)
@@ -111,11 +121,11 @@ public class UI_SkillIcon : MonoBehaviour
                 T_MP.gameObject.SetActive(false);
             }
         }
-        m_SkillUnuseable.SetActive(m_CharacterSkill.skillState == SkillState.CharacterStateUnUseableSkill);
-        m_SkillLevel0.SetActive(m_CharacterSkill.skillState == SkillState.Level0);
-        m_SkillNotEnoughMP.SetActive(m_CharacterSkill.skillState == SkillState.NotEnoughMP);
-        m_SkillCooldown.SetActive(m_CharacterSkill.skillState == SkillState.Cooldown);
-        switch (m_CharacterSkill.skillState)
+        m_SkillUnuseable.SetActive(m_SkillPosSkill.m_SkillState == SkillState.CharacterStateUnUseableSkill);
+        m_SkillLevel0.SetActive(m_SkillPosSkill.m_SkillState == SkillState.Level0);
+        m_SkillNotEnoughMP.SetActive(m_SkillPosSkill.m_SkillState == SkillState.NotEnoughMP);
+        m_SkillCooldown.SetActive(m_SkillPosSkill.m_SkillState == SkillState.Cooldown);
+        switch (m_SkillPosSkill.m_SkillState)
         {
             case SkillState.Useable:
                 break;
@@ -126,7 +136,7 @@ public class UI_SkillIcon : MonoBehaviour
             case SkillState.Level0:
                 break;
             case SkillState.Cooldown:
-                T_SkillCooldown.text = m_CharacterSkill.skillCooldown.ToString("F0");
+                T_SkillCooldown.text = m_SkillPosSkill.m_SkillCooldown.ToString("F0");
                 break;
         }
     }

@@ -16,9 +16,9 @@ public class SpellSkill
         { SpellType.Artifact, ArtifactSkillID}
     };
 
-    public static int GetSpellSkillID(SpellType spellType)
+    public static SkillData[] GetSpellSkillDatas(SpellType spellType)
     {
-        return D_SpellSkillID[spellType];
+        return SkillData.GetData(D_SpellSkillID[spellType]);
     }
 
 }

@@ -1,6 +1,7 @@
 using Cysharp.Threading.Tasks;
 using System.Threading;
 using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
 
 public class Util
 {
@@ -76,6 +77,11 @@ public class Util
         return new Vector2(u * Util.CanvasResolutionWidth, v * Util.CanvasResolutionHeight);
     }
 
+    public static Vector2 World2Screen(Vector3 worldPos)
+    {
+        Vector3 screenPosition = Camera.main.WorldToScreenPoint(worldPos);
+        return screenPosition;
+    }
     /// <summary>
     /// 박스 콜라이더의 보간되지않은 노말을 얻는 함수
     /// </summary>

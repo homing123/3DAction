@@ -44,6 +44,7 @@ public class PlayerInput : MonoBehaviour
     }
    
     public static PlayerInput Ins;
+    [SerializeField] float m_ScreenMoveWidth = 50;
 
     Vector3 m_MouseGroundPos;
     Character m_CharacterTarget;
@@ -190,9 +191,41 @@ public class PlayerInput : MonoBehaviour
             m_isAttack = false;
             OnInput?.Invoke(inputinfo);
         }
+
+        Vector2 mousePos = Input.mousePosition;
+        Vector2 screenSize = new Vector2(Screen.width, Screen.height);
+        Vector2 camMoveDir = default;
+        if (mousePos.x < m_ScreenMoveWidth)
+        {
+            camMoveDir.x = -1;
+        }
+        else if (mousePos.x > screenSize.x - m_ScreenMoveWidth)
+        {
+            camMoveDir.x = 1;
+        }
+        if (mousePos.y < m_ScreenMoveWidth)
+        {
+            camMoveDir.y = -1;
+        }
+        else if (mousePos.y > screenSize.y - m_ScreenMoveWidth)
+        {
+            camMoveDir.y = 1;
+        }
+        if(camMoveDir != Vector2.zero)
+        {
+            CamM.Ins.CamMove(camMoveDir);
+        }
+        if (Input.GetKey(KeyCode.Space))
+        {
+            CamM.Ins.CamLookTarget(PlayerM.Ins.GetPlayerCharacter().transform);
+        }
     }
 
-   
+    private void LateUpdate()
+    {       
+
+    }
+
     void GetMouseRayCast()
     {
         Vector3 camPos = CamM.Ins.transform.position;

@@ -9,6 +9,7 @@ public class CamM : MonoBehaviour
     const string MouseX = "Mouse X";
     public static CamM Ins;
 
+    [SerializeField] float m_CamMoveSpeed = 0.15f;
     [SerializeField] Transform m_Target;
 
     private void Awake()
@@ -35,11 +36,7 @@ public class CamM : MonoBehaviour
   
     void SetHeight()
     {
-        if(m_Target)
-        {
-            transform.position = m_Target.transform.position - transform.forward * m_CamDis;
-        }
-        else if(Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, m_CamDis + 5, Define.D_LayerMask[Layer.Ground]))
+        if(Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, m_CamDis + 5, Define.D_LayerMask[Layer.Ground]))
         {
             transform.position = hit.point - transform.forward * m_CamDis;
         }
@@ -54,6 +51,17 @@ public class CamM : MonoBehaviour
         m_Target = null;
     }
   
+    public void CamMove(Vector2 dir)
+    {
+        Vector3 xMove = Vector3.Cross(Vector3.up, transform.forward).normalized;
+        Vector3 zMove = Vector3.Cross(xMove, Vector3.up).normalized;
+        Vector3 moveDis = xMove * dir.x + zMove * dir.y;
+        transform.position += moveDis * m_CamMoveSpeed;
+    }
+    public void CamLookTarget(Transform target)
+    {
+        transform.position = target.transform.position - transform.forward * m_CamDis;
+    }
 #if UNITY_EDITOR
     [ContextMenu("LookPlayer")]
     public void SetLookPlayer()

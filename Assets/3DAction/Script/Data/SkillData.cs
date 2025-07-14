@@ -47,14 +47,23 @@ public enum SkillPos
 
 public struct SkillAttackInfo
 {
+    public bool isCritical { get; private set; }
     public float damage { get; private set; }
-    public SkillAttackInfo(Bio user, float _damage)
+    public float skillDamage { get; private set; }
+    public float trueDamage { get; private set; }
+    public SkillAttackInfo(Bio user, float _damage, bool iscritical)
     {
         damage = _damage;
+        isCritical = iscritical;
+        skillDamage = 0;
+        trueDamage = 0;
     }
     public SkillAttackInfo(Bio user, SkillData skillData, int idx = 0)
     {
-        damage = user.m_Status.CalcSkillDamage(skillData, idx);
+        isCritical = false;
+        damage = 0;
+        skillDamage = user.m_Status.CalcSkillDamage(skillData, idx);
+        trueDamage = 0;
     }
 }
 

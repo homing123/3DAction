@@ -212,15 +212,18 @@ public class Status : MonoBehaviour
         if (m_Death) return;
 
         // 방어력에 의한 데미지 감소 계산
-        float reducedDamage = CalculateDamageAfterDefense(skillAttackInfo.damage);
+        float adDamage = skillAttackInfo.damage <= 0 ? 0 : CalculateDamageAfterDefense(skillAttackInfo.damage);
+        float skillDamage = skillAttackInfo.skillDamage <= 0 ? 0 : CalculateDamageAfterDefense(skillAttackInfo.skillDamage);
+        float trueDamage = skillAttackInfo.trueDamage;
 
+        float totalDamage = adDamage + skillDamage + trueDamage;
         // 체력 감소
         //UI_Damage.Create(m_Bio, reducedDamage);
-        m_CurHP -= reducedDamage;
+        m_CurHP -= totalDamage;
         m_CurHP = Mathf.Max(0, m_CurHP);
 
         // 이벤트 호출
-        OnGetDamage?.Invoke(reducedDamage);
+        OnGetDamage?.Invoke(damage);
         OnStatusChanged?.Invoke();
 
         // 체력이 0 이하면 죽음 처리

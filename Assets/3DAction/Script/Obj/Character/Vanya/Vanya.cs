@@ -133,7 +133,7 @@ public class Vanya : Character
             if (disToTarget <= GetAttackRange())
             {
                 Vanya_Attack vanyaAttack = Instantiate(m_VanyaAttackPrefab, m_VanyaQStartPos.position, Quaternion.identity);
-                SkillAttackInfo attackInfo = new SkillAttackInfo(this, damage);
+                SkillAttackInfo attackInfo = new SkillAttackInfo(this, damage, isCritical);
                 vanyaAttack.Setting(this, m_AttackTarget, in attackInfo);
             }
         }

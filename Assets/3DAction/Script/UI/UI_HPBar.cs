@@ -54,7 +54,8 @@ public class UI_HPBar : MonoBehaviour
     {
         if (m_Target != null)
         {
-            UpdatePosition();
+            Vector2 screenPos = Util.World2Screen(m_Target.GetUIPivotPos());
+            transform.position = screenPos + m_ScreenOffset;
             SetHPBarcodeWitheFillAmount();
         }
     }
@@ -176,20 +177,7 @@ public class UI_HPBar : MonoBehaviour
             }
         }
     }
-    private void UpdatePosition()
-    {
-        // 월드 좌표에 오프셋 적용
-        Vector3 worldPosition = m_Target.GetUIPivotPos();
-
-        // 월드 좌표를 스크린 좌표로 변환
-        Vector3 screenPosition = m_MainCam.WorldToScreenPoint(worldPosition);
-
-        // 스크린 오프셋 적용
-        screenPosition.x += m_ScreenOffset.x;
-        screenPosition.y += m_ScreenOffset.y;
-
-        transform.position = screenPosition;
-    }
+    
     public static void Create(Bio target)
     {
         UI_HPBar hpBar = Instantiate(ResM.Ins.HPBar, GM.Canvas.transform);

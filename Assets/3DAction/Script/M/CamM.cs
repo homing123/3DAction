@@ -11,6 +11,8 @@ public class CamM : MonoBehaviour
 
     [SerializeField] float m_CamMoveSpeed = 0.15f;
     [SerializeField] Transform m_Target;
+    public Vector2 m_CamScreenRight { get; private set; }
+    public Vector2 m_CamScreenForward { get; private set; }
 
     private void Awake()
     {
@@ -23,7 +25,10 @@ public class CamM : MonoBehaviour
 
     void Start()
     {
-
+        Vector3 xMove = Vector3.Cross(Vector3.up, transform.forward).normalized.VT2XZ();
+        Vector3 zMove = Vector3.Cross(xMove, Vector3.up).normalized;
+        m_CamScreenRight = xMove.VT2XZ();
+        m_CamScreenForward = zMove.VT2XZ();
     }
 
     // Update is called once per frame
@@ -53,10 +58,9 @@ public class CamM : MonoBehaviour
   
     public void CamMove(Vector2 dir)
     {
-        Vector3 xMove = Vector3.Cross(Vector3.up, transform.forward).normalized;
-        Vector3 zMove = Vector3.Cross(xMove, Vector3.up).normalized;
-        Vector3 moveDis = xMove * dir.x + zMove * dir.y;
-        transform.position += moveDis * m_CamMoveSpeed;
+
+        Vector2 moveDis = m_CamScreenRight * dir.x + m_CamScreenForward * dir.y;
+        transform.position += moveDis.VT2XZToVT3() * m_CamMoveSpeed;
     }
     public void CamLookTarget(Transform target)
     {

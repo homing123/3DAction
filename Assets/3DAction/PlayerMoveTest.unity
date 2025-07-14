@@ -2250,6 +2250,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_CamDis: 13
+  m_CamMoveSpeed: 0.15
   m_Target: {fileID: 0}
 --- !u!114 &1631142175
 MonoBehaviour:
@@ -2263,6 +2264,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31279813e664ebb4a8644e5045bd82e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_ScreenMoveWidth: 50
 --- !u!224 &1659099847 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 6894903682710100331, guid: 359c1adc23178694384fe8bebed3126e, type: 3}

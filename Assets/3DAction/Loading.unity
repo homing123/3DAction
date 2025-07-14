@@ -208,6 +208,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   HPBar: {fileID: 6783599448930129521, guid: e4201720f0270454587904388a15a355, type: 3}
+  DamageText: {fileID: 3970607718256689781, guid: a403d22b1c9eb88499f682e223fb7c9c, type: 3}
   HitRange_Quad: {fileID: 0}
   HitRange_Circle: {fileID: 7910824128300723616, guid: 976675e3f7810714d9c30e184ab92262, type: 3}
   VFX_Slash: {fileID: 0}

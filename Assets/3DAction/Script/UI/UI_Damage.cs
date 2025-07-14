@@ -1,45 +1,124 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEditor.Experimental.GraphView;
+using UnityEngine.Rendering;
+
 public class UI_Damage : MonoBehaviour
 {
-    public static void CreateDamage(bool isCritical, float attackDamage, float skillDamage, float trueDamage)
+    public enum DamageTextType
     {
-        UI_Damage uiDamage = Instantiate(ResM.Ins.DamageText);
-
-        if(attackDamage > 0)
-        {
-            uiDamage.SetADDamage(isCritical, attackDamage);
-        }
-        if(skillDamage > 0)
-        {
-            uiDamage.SetSkillDamage(skillDamage);
-        }
-        if(trueDamage > 0)
-        {
-            uiDamage.SetTrueDamage(trueDamage);
-        }
+        SkillDamage,
+        AttackDamage,
+        CriticalAttackDamage,
+        TrueDamage,
+        HPHeal,
+        MPHeal
     }
-
-    void SetADDamage(bool isCritical, float damage)
+    public static void CreateSkillDamage(Bio attacker, Bio hitter, float skillDamage, int createIdx)
     {
-        
+        UI_Damage uiDamage = Instantiate(ResM.Ins.DamageText, GM.Canvas.transform);
+        uiDamage.m_Type = DamageTextType.SkillDamage;
+        uiDamage.SetPosDamage(attacker, hitter);
+        uiDamage.MoveOffset(createIdx);
+        uiDamage.T_Damage.text = skillDamage.ToString("F0");
+        uiDamage.T_Damage.color = uiDamage.m_SkillDamageColor;
     }
-    void SetSkillDamage(float damage)
+    public static void CreateAttackDamage(Bio attacker, Bio hitter, float attackDamage, bool isCritical, int createIdx)
     {
-
+        UI_Damage uiDamage = Instantiate(ResM.Ins.DamageText, GM.Canvas.transform);
+        uiDamage.m_Type = isCritical == true ? DamageTextType.CriticalAttackDamage : DamageTextType.AttackDamage;
+        uiDamage.SetPosDamage(attacker, hitter);
+        uiDamage.MoveOffset(createIdx);
+        uiDamage.T_Damage.text = attackDamage.ToString("F0");
+        uiDamage.T_Damage.color = uiDamage.m_AttackDamageColor;
+        uiDamage.I_Icon.gameObject.SetActive(isCritical);
     }
-    void SetTrueDamage(float trueDamage)
+    public static void CreateTrueDamage(Bio attacker, Bio hitter, float trueDamage, int createIdx)
     {
-
+        UI_Damage uiDamage = Instantiate(ResM.Ins.DamageText, GM.Canvas.transform);
+        uiDamage.m_Type = DamageTextType.TrueDamage;
+        uiDamage.SetPosDamage(attacker, hitter);
+        uiDamage.MoveOffset(createIdx);
+        uiDamage.T_Damage.text = trueDamage.ToString("F0");
+        uiDamage.T_Damage.color = uiDamage.m_TrueDamageColor;
     }
-    
-    public static void CreateHealDamage(float heal)
+    public static void CreateHPHeal(Bio target, float hpHeal, int createIdx)
     {
-
+        UI_Damage uiDamage = Instantiate(ResM.Ins.DamageText, GM.Canvas.transform);
+        uiDamage.m_Type = DamageTextType.HPHeal;
+        uiDamage.SetPosHeal(target);
+        uiDamage.MoveOffset(createIdx);
+        uiDamage.T_Damage.text = hpHeal.ToString("F0");
+        uiDamage.T_Damage.color = uiDamage.m_HPHealColor;
     }
+    public static void CreateMPHeal(Bio target, float mpHeal, int createIdx)
+    {
+        UI_Damage uiDamage = Instantiate(ResM.Ins.DamageText, GM.Canvas.transform);
+        uiDamage.m_Type = DamageTextType.MPHeal;
+        uiDamage.SetPosHeal(target);
+        uiDamage.MoveOffset(createIdx);
+        uiDamage.T_Damage.text = mpHeal.ToString("F0");
+        uiDamage.T_Damage.color = uiDamage.m_MPHealColor;
+    }
+    [SerializeField] Color32 m_SkillDamageColor;
+    [SerializeField] Color32 m_AttackDamageColor;
+    [SerializeField] Color32 m_TrueDamageColor;
+    [SerializeField] Color32 m_HPHealColor;
+    [SerializeField] Color32 m_MPHealColor;
+
+    [SerializeField] Vector2 m_ScreenOffsetDamages;
+    [SerializeField] Vector2 m_ScreenOffsetHeals;
+    [SerializeField] float m_CreateIdxOffset;
+
     [SerializeField] TextMeshProUGUI T_Damage;
     [SerializeField] Image I_Icon;
- 
+    DamageTextType m_Type;
+    bool m_isLeft;
+
+
+
+    void SetPosDamage(Bio attacker, Bio hitter)
+    {
+        Vector2 user2Target = (hitter.transform.position - attacker.transform.position).VT2XZ();
+        m_isLeft = Vector2.Dot(CamM.Ins.m_CamScreenRight, user2Target) >= 0;
+        transform.position = Util.World2Screen(hitter.transform.position);
+    }
+    void SetPosHeal(Bio target)
+    {
+        transform.position = Util.World2Screen(target.transform.position);
+    }
+
+    void MoveOffset(int createIdx)
+    {
+        switch(m_Type)
+        {
+            case DamageTextType.SkillDamage:
+            case DamageTextType.AttackDamage:
+            case DamageTextType.CriticalAttackDamage:
+            case DamageTextType.TrueDamage:
+                {
+                    Vector3 screenOffset = m_ScreenOffsetDamages;
+                    if (m_isLeft)
+                    {
+                        screenOffset.x = -screenOffset.x;
+                    }
+                    screenOffset.y += -createIdx * m_CreateIdxOffset;
+                    transform.position += screenOffset;
+                }
+                break;
+
+            case DamageTextType.HPHeal:
+            case DamageTextType.MPHeal:
+                {
+                    Vector3 screenOffset = m_ScreenOffsetHeals;
+                    screenOffset.y += -createIdx * m_CreateIdxOffset;
+                    transform.position += screenOffset;
+                }
+                break;
+        }
+    }
+
+
 
 }

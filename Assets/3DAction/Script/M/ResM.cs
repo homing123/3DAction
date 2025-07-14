@@ -6,7 +6,7 @@ public class ResM : SingleM<ResM>
     //UI
     [Header("UI")]
     public UI_HPBar HPBar;
-
+    public UI_Damage DamageText;
     //Not UI
     [Header("Obj")]
     public HitRange HitRange_Quad;

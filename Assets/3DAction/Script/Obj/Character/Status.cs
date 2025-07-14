@@ -70,7 +70,6 @@ public class Status : MonoBehaviour
 
     public event Action OnDeath; // 죽음 이벤트
     public event Action OnStatusChanged;
-    public event Action<float> OnGetDamage; // 데미지 받은 이벤트
     public event Action<State, State> OnStateChanged; //STATE_1 = xor 이전과 달라진 비트 => 1, STATE_2 = 현재STATE => m_State
     public event Action OnEXPLevelChanged;
     public event Action OnSkillLevelUpPointChanged;
@@ -223,7 +222,6 @@ public class Status : MonoBehaviour
         m_CurHP = Mathf.Max(0, m_CurHP);
 
         // 이벤트 호출
-        OnGetDamage?.Invoke(damage);
         OnStatusChanged?.Invoke();
 
         // 체력이 0 이하면 죽음 처리

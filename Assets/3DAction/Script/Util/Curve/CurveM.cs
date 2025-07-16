@@ -5,6 +5,19 @@ using Unity.Collections.LowLevel.Unsafe;
 
 public class CurveM : MonoBehaviour
 {
+    static CurveM ins;
+    public static CurveM Ins
+    {
+        get
+        { 
+            if(ins == null)
+            {
+                ins = FindFirstObjectByType<CurveM>();
+            }
+            return ins;
+        }
+    }
+
     [System.Serializable]
     class BezierCurveByKey
     {
@@ -18,6 +31,7 @@ public class CurveM : MonoBehaviour
             m_CurveInfo = new BezierCurveInfo(m_Points);
         }
     }
+    [SerializeField] Transform m_CurveObjParent;
     [SerializeField] List<BezierCurveByKey> m_Curves;
     [SerializeField] GameObject m_CurvePointPrefab;
     [SerializeField] string m_FindID;
@@ -57,6 +71,26 @@ public class CurveM : MonoBehaviour
     public void SaveEditCurve()
     {
 
+    }
+    public void UpdateCurEditCurve()
+    {
+        if(m_EditCurve == null)
+        {
+            return;
+        }
+
+        int pointCount = m_CurveObjParent.childCount / 3;
+        BezierCurvePoint[] points = new BezierCurvePoint[pointCount];
+        for (int i = 0; i < pointCount; i++)
+        {
+            Vector3 curPos = m_CurveObjParent.GetChild(i * 3).position;
+            Vector3 prevPos = m_CurveObjParent.GetChild(i * 3 + 1).position;
+            Vector3 nextPos = m_CurveObjParent.GetChild(i * 3 + 2).position;
+            points[i] = new BezierCurvePoint(curPos, prevPos, nextPos);
+        }
+
+        Debug.Log("저장");
+        m_EditCurve = new BezierCurveByKey(m_EditCurve.m_ID, points);
     }
     bool FindBezierCurveByKey(string id, out BezierCurveByKey curveByKey)
     {
@@ -102,18 +136,18 @@ public class CurveM : MonoBehaviour
 
         m_EditCurve = GoogleSheetReader.DeepCopyJson<BezierCurveByKey>(curveByKey);
         //이전 커브 오브젝트 제거
-        int curChildCount = transform.childCount;
+        int curChildCount = m_CurveObjParent.childCount;
         for (int i = curChildCount - 1; i >= 0; i--)
         {
-            DestroyImmediate(transform.GetChild(i).gameObject);
+            DestroyImmediate(m_CurveObjParent.GetChild(i).gameObject);
         }
 
         m_EditPoints = new GameObject[points.Length * 3];
         for (int i = 0; i < points.Length; i++)
         {
-            GameObject posObj = Instantiate(m_CurvePointPrefab, transform);
-            GameObject prevObj = Instantiate(m_CurvePointPrefab, transform);
-            GameObject nextObj = Instantiate(m_CurvePointPrefab, transform);
+            GameObject posObj = Instantiate(m_CurvePointPrefab, m_CurveObjParent);
+            GameObject prevObj = Instantiate(m_CurvePointPrefab, m_CurveObjParent);
+            GameObject nextObj = Instantiate(m_CurvePointPrefab, m_CurveObjParent);
             posObj.name = $"{i} Pos";
             prevObj.name = $"{i} PrevPos";
             nextObj.name = $"{i} NextPos";
@@ -134,27 +168,30 @@ public class CurveM : MonoBehaviour
             return;
         }
         BezierCurvePoint[] points = m_EditCurve.m_Points;
+        BezierCurveInfo info = m_EditCurve.m_CurveInfo;
         if(points.Length <= 0)
         {
             return;
         }
         for (int i = 0; i < points.Length - 1; i++)
         {
-            Vector3 curPos = transform.GetChild(i * 3).position;
-            Vector3 prevPos = transform.GetChild(i * 3 + 1).position;
-            Vector3 nextPos = transform.GetChild(i * 3 + 2).position;
-            Vector3 nextPointPos = transform.GetChild(i * 3 + 3).position;
+            Vector3 curPos = points[i].Pos;
+            Vector3 prevPos = points[i].PrevPos;
+            Vector3 nextPos = points[i].NextPos;
 
             Gizmos.DrawLine(curPos, prevPos);
             Gizmos.DrawLine(curPos, nextPos);
         }
 
         int lastIdx = points.Length - 1;
-        Vector3 lastPointCurPos = transform.GetChild(lastIdx * 3).position;
-        Vector3 lastPointPrevPos = transform.GetChild(lastIdx * 3 + 1).position;
-        Vector3 lastPointNextPos = transform.GetChild(lastIdx * 3 + 2).position;
+        Vector3 lastPointCurPos = points[lastIdx].Pos;
+        Vector3 lastPointPrevPos = points[lastIdx].PrevPos;
+        Vector3 lastPointNextPos = points[lastIdx].NextPos;
         Gizmos.DrawLine(lastPointCurPos, lastPointPrevPos);
         Gizmos.DrawLine(lastPointCurPos, lastPointNextPos);
+
+        Vector3[] markers = info.GetMarkers();
+        Gizmos.DrawLineStrip(markers, false);
         //0->1, 0->2, 0->3, 3->4, 3->5, 3->6
     }
 
@@ -251,6 +288,10 @@ namespace HMCurve
                 }
             }
             return Vector3.Lerp(m_PosSplitT[idx - 1], m_PosSplitT[idx], lerpValue);
+        }
+        public Vector3[] GetMarkers()
+        {
+            return m_PosSplitT;
         }
 
     }

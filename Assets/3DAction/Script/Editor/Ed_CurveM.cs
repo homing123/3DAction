@@ -15,8 +15,4 @@ public class Ed_CurveM : Editor
             Ins.CreateCurve();
         }
     }
-    void OnSceneGUI()
-    {
-        Debug.Log("¾À");
-    }
 }

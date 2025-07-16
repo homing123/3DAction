@@ -22,6 +22,13 @@ public class DamageTextCreater : MonoBehaviour
             SkillDamage = skillDamage;
             TrueDamage = trueDamage;
         }
+        public void Add(DamageTextInfo otherinfo)
+        {
+            IsCritical |= otherinfo.IsCritical;
+            AttackDamage += otherinfo.AttackDamage;
+            SkillDamage += otherinfo.SkillDamage;
+            TrueDamage += otherinfo.TrueDamage;
+        }
     }
     public struct HealTextInfo
     {
@@ -34,12 +41,17 @@ public class DamageTextCreater : MonoBehaviour
             HPHealValue = hpHealValue;
             MPHealValue = mpHealValue;
         }
+        public void Add(HealTextInfo otherInfo)
+        {
+            HPHealValue+= otherInfo.HPHealValue;
+            MPHealValue+= otherInfo.MPHealValue;
+        }
     }
     const float CreateDelay = 0.1f;
     public static DamageTextCreater Ins;
 
-    Dictionary<Bio, List<DamageTextInfo>> m_DamageTextInfo = new Dictionary<Bio, List<DamageTextInfo>>();
-    Dictionary<Bio, List<HealTextInfo>> m_HealTextInfo = new Dictionary<Bio, List<HealTextInfo>>();
+    List<DamageTextInfo> L_DamageTextInfo = new List<DamageTextInfo>();
+    List<HealTextInfo> L_HealTextInfo = new List<HealTextInfo>();
 
     private void Awake()
     {
@@ -49,80 +61,83 @@ public class DamageTextCreater : MonoBehaviour
 
     private void Update()
     {
-        foreach(Bio key in m_DamageTextInfo.Keys)
+        for(int i=0;i< L_DamageTextInfo.Count;i++)
         {
-            List<DamageTextInfo> damageTextInfose = m_DamageTextInfo[key];
-            if(m_DamageTextInfo.Count == 0)
-            {
-                continue;
-            }
-            Bio attacker = m_DamageTextInfo[key]
-            float attackDamage = 0;
-            bool isCritical = false;
-            float skillDamage = 0;
-            float trueDamage = 0;
-            for(int i=0;i<damageTextInfose.Count;i++)
-            {
-                attackDamage += damageTextInfose[i].AttackDamage;
-                skillDamage += damageTextInfose[i].SkillDamage;
-                trueDamage += damageTextInfose[i].TrueDamage;
-                isCritical = (isCritical | damageTextInfose[i].IsCritical);
-            }
-            int createCount = 0;
+            Bio attacker = L_DamageTextInfo[i].Attacker;
+            Bio hitter = L_DamageTextInfo[i].Hitter;
+            float attackDamage = L_DamageTextInfo[i].AttackDamage;
+            bool isCritical = L_DamageTextInfo[i].IsCritical;
+            float skillDamage = L_DamageTextInfo[i].SkillDamage;
+            float trueDamage = L_DamageTextInfo[i].TrueDamage;
+            int createIdx = 0;
             if (skillDamage > 0)
             {
-                UI_Damage.CreateSkillDamage(damage)
-                createCount++;
+                UI_Damage.CreateSkillDamage(attacker, hitter, skillDamage, createIdx);
+                createIdx++;
             }
             if (attackDamage > 0)
             {
-                createCount++;
+                UI_Damage.CreateAttackDamage(attacker, hitter, attackDamage, isCritical, createIdx);
+                createIdx++;
             }
-            if(trueDamage > 0)
+            if (trueDamage > 0)
             {
-                createCount++;
+                UI_Damage.CreateTrueDamage(attacker, hitter, trueDamage, createIdx);
+                createIdx++;
             }
         }
 
-        foreach (Bio key in m_HealTextInfo.Keys)
+        for (int i = 0; i < L_HealTextInfo.Count;i++)
         {
-            List<HealTextInfo> healTextInfo = m_HealTextInfo[key];
-            if (m_HealTextInfo.Count == 0)
+            Bio target = L_HealTextInfo[i].Target;
+            float hpHealValue = L_HealTextInfo[i].HPHealValue;
+            float mpHealValue = L_HealTextInfo[i].MPHealValue;
+            int createIdx = 0;
+            if(hpHealValue > 0)
             {
-                continue;
+                UI_Damage.CreateHPHeal(target, hpHealValue, createIdx);
+                createIdx++;
             }
-            float hpHeal = 0;
-            float mpHeal = 0;
-            for (int i = 0; i < healTextInfo.Count; i++)
+            if(mpHealValue>0)
             {
-                hpHeal += healTextInfo[i].HPHealValue;
-                mpHeal += healTextInfo[i].MPHealValue;
-            }
-            int createCount = 0;
-            if (hpHeal > 0)
-            {
-                createCount++;
-            }
-            if (mpHeal > 0)
-            {
-                createCount++;
+                UI_Damage.CreateMPHeal(target, mpHealValue, createIdx);
+                createIdx++;
             }
         }
+        L_DamageTextInfo.Clear();
+        L_HealTextInfo.Clear();
     }
     public void CreateDamage(Bio attacker, Bio hitter, bool isCritical, float attackDamage, float skillDamage, float trueDamage)
     {
-        if(m_DamageTextInfo.ContainsKey(hitter)== false)
+        Character player = PlayerM.Ins.GetPlayerCharacter();
+        if (attacker != player && hitter != player)
         {
-            m_DamageTextInfo.Add(hitter, new List<DamageTextInfo>());
+            return;
         }
-        m_DamageTextInfo[hitter].Add(new DamageTextInfo(attacker, hitter, isCritical, attackDamage, skillDamage, trueDamage));
+        DamageTextInfo dmgTextInfo = new DamageTextInfo(attacker, hitter, isCritical, attackDamage, skillDamage, trueDamage);
+        for (int i = 0; i < L_DamageTextInfo.Count; i++)
+        {
+            if (L_DamageTextInfo[i].Attacker == attacker && L_DamageTextInfo[i].Hitter == hitter)
+            {
+                L_DamageTextInfo[i].Add(dmgTextInfo);
+                return;
+            }
+        }
+
+        L_DamageTextInfo.Add(dmgTextInfo);
     }
     public void CreateHeal(Bio target, float hpHeal, float mpHeal)
     {
-        if (m_HealTextInfo.ContainsKey(target) == false)
+        HealTextInfo healTextInfo = new HealTextInfo(target, hpHeal, mpHeal);
+        for (int i = 0; i < L_HealTextInfo.Count; i++)
         {
-            m_HealTextInfo.Add(target, new List<HealTextInfo>());
+            if (L_HealTextInfo[i].Target == target)
+            {
+                L_HealTextInfo[i].Add(healTextInfo);
+                return;
+            }
         }
-        m_HealTextInfo[target].Add(new HealTextInfo(target, hpHeal, mpHeal));
+
+        L_HealTextInfo.Add(healTextInfo);
     }
 }

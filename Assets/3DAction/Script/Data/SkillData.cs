@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System;
+using static UnityEngine.UIElements.UxmlAttributeDescription;
+
 public enum SkillType
 {
     WeaponSkill,
@@ -47,19 +49,22 @@ public enum SkillPos
 
 public struct SkillAttackInfo
 {
+    public Bio user { get; private set; }
     public bool isCritical { get; private set; }
     public float damage { get; private set; }
     public float skillDamage { get; private set; }
     public float trueDamage { get; private set; }
-    public SkillAttackInfo(Bio user, float _damage, bool iscritical)
+    public SkillAttackInfo(Bio _user, float _damage, bool iscritical)
     {
+        user = _user;
         damage = _damage;
         isCritical = iscritical;
         skillDamage = 0;
         trueDamage = 0;
     }
-    public SkillAttackInfo(Bio user, SkillData skillData, int idx = 0)
+    public SkillAttackInfo(Bio _user, SkillData skillData, int idx = 0)
     {
+        user = _user;
         isCritical = false;
         damage = 0;
         skillDamage = user.m_Status.CalcSkillDamage(skillData, idx);

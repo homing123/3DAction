@@ -216,6 +216,12 @@ public class Status : MonoBehaviour
         float trueDamage = skillAttackInfo.trueDamage;
 
         float totalDamage = adDamage + skillDamage + trueDamage;
+        if(totalDamage <= 0)
+        {
+            return;
+        }
+
+        DamageTextCreater.Ins.CreateDamage(skillAttackInfo.user, m_Bio, skillAttackInfo.isCritical, adDamage, skillDamage, trueDamage);
         // 체력 감소
         //UI_Damage.Create(m_Bio, reducedDamage);
         m_CurHP -= totalDamage;

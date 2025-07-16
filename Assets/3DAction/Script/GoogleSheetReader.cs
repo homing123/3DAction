@@ -212,7 +212,7 @@ public class GoogleSheetReader : MonoBehaviour
         BinaryFormatter bf = new BinaryFormatter();
         data = (T)bf.Deserialize(me);
     }
-
+    
     static void Log(string log)
     {
         if(Ins.m_UseLog == false)
@@ -220,6 +220,21 @@ public class GoogleSheetReader : MonoBehaviour
             return;
         }
         Debug.Log(log);
+    }
+
+
+    /// <summary>
+    /// 해당 함수는 비효율 적이므로 테스트용도에서만 쓸것
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="obj"></param>
+    /// <returns></returns>
+    public static T DeepCopyJson<T>(T obj)
+    {
+        if (obj == null) return default(T);
+
+        string json = JsonUtility.ToJson(obj);
+        return JsonUtility.FromJson<T>(json);
     }
 
     //    public static T ReadData<T>(string filename, string filepath = null)

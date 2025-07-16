@@ -25,8 +25,9 @@ public class CamM : MonoBehaviour
 
     void Start()
     {
-        Vector3 xMove = Vector3.Cross(Vector3.up, transform.forward).normalized.VT2XZ();
+        Vector3 xMove = Vector3.Cross(Vector3.up, transform.forward).normalized;
         Vector3 zMove = Vector3.Cross(xMove, Vector3.up).normalized;
+        Debug.Log(xMove);
         m_CamScreenRight = xMove.VT2XZ();
         m_CamScreenForward = zMove.VT2XZ();
     }
@@ -58,7 +59,6 @@ public class CamM : MonoBehaviour
   
     public void CamMove(Vector2 dir)
     {
-
         Vector2 moveDis = m_CamScreenRight * dir.x + m_CamScreenForward * dir.y;
         transform.position += moveDis.VT2XZToVT3() * m_CamMoveSpeed;
     }

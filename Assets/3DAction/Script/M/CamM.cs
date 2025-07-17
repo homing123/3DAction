@@ -27,7 +27,6 @@ public class CamM : MonoBehaviour
     {
         Vector3 xMove = Vector3.Cross(Vector3.up, transform.forward).normalized;
         Vector3 zMove = Vector3.Cross(xMove, Vector3.up).normalized;
-        Debug.Log(xMove);
         m_CamScreenRight = xMove.VT2XZ();
         m_CamScreenForward = zMove.VT2XZ();
     }

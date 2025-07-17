@@ -10,9 +10,21 @@ public class Ed_CurveM : Editor
     {
         base.OnInspectorGUI();
         Ins = (CurveM)target;
-        if(GUILayout.Button("CreatePath"))
+        if(GUILayout.Button("CreateNewEditCurve"))
         {
-            Ins.CreateCurve();
+            Ins.CreateNewEditCurve();
+        }
+        if(GUILayout.Button("AddEditCurvePoint"))
+        {
+            Ins.AddEditCurvePoint();
+        }
+        if(GUILayout.Button("SaveEditCurve"))
+        {
+            Ins.SaveEditCurve();
+        }
+        if (GUILayout.Button("ToEditCurve"))
+        {
+            Ins.CurveToEdit();
         }
     }
 }

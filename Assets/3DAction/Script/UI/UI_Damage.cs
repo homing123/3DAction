@@ -75,6 +75,20 @@ public class UI_Damage : MonoBehaviour
     [SerializeField] Image I_Icon;
     DamageTextType m_Type;
     bool m_isLeft;
+    [SerializeField] string m_DamageCurveKey;
+    [SerializeField] float m_DamageCurveSpeed;
+    [SerializeField] AnimationCurve m_DamageCurveSpeedCurve;
+    [SerializeField] AnimationCurve m_DamageSizeCurve;
+    [SerializeField] AnimationCurve m_DamageFadeAlphaCurve;
+    [SerializeField] float m_DamageLifeTime;
+    float m_DamageCurveMoveDis;
+    [SerializeField] string m_HealCurveKey;
+    [SerializeField] float m_HealCurveSpeed;
+    [SerializeField] AnimationCurve m_HealCurveSpeedCurve;
+    [SerializeField] AnimationCurve m_HealSizeCurve;
+    [SerializeField] AnimationCurve m_HealFadeAlphaCurve;
+    [SerializeField] float m_HealLifeTime;
+
 
 
 

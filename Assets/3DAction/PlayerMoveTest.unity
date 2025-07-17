@@ -2296,6 +2296,7 @@ MonoBehaviour:
   m_CamDis: 13
   m_CamMoveSpeed: 0.15
   m_Target: {fileID: 0}
+  m_MoveCam: 1
 --- !u!114 &1631142175
 MonoBehaviour:
   m_ObjectHideFlags: 0

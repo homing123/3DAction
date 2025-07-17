@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using UnityEditor.Experimental.GraphView;
+using HMCurve;
 using UnityEngine.Rendering;
 
 public class UI_Damage : MonoBehaviour
@@ -81,26 +81,37 @@ public class UI_Damage : MonoBehaviour
     [SerializeField] AnimationCurve m_DamageSizeCurve;
     [SerializeField] AnimationCurve m_DamageFadeAlphaCurve;
     [SerializeField] float m_DamageLifeTime;
-    float m_DamageCurveMoveDis;
+    [SerializeField] float m_DamageFontSize;
+
     [SerializeField] string m_HealCurveKey;
     [SerializeField] float m_HealCurveSpeed;
     [SerializeField] AnimationCurve m_HealCurveSpeedCurve;
     [SerializeField] AnimationCurve m_HealSizeCurve;
     [SerializeField] AnimationCurve m_HealFadeAlphaCurve;
     [SerializeField] float m_HealLifeTime;
+    [SerializeField] float m_HealFontSize;
+    float m_CurveMoveDis;
+    float m_CurTime;
 
-
-
-
+    Vector3 m_StartWorldPos;
+    BezierCurveInfo m_CurveInfo;
+    private void Start()
+    {
+        
+    }
     void SetPosDamage(Bio attacker, Bio hitter)
     {
         Vector2 user2Target = (hitter.transform.position - attacker.transform.position).VT2XZ();
         m_isLeft = Vector2.Dot(CamM.Ins.m_CamScreenRight, user2Target) >= 0;
+        m_StartWorldPos = hitter.transform.position;
         transform.position = Util.World2Screen(hitter.transform.position);
+        m_CurveInfo = CurveM.Ins.GetCurve(m_DamageCurveKey);
     }
     void SetPosHeal(Bio target)
     {
+        m_StartWorldPos = target.transform.position;
         transform.position = Util.World2Screen(target.transform.position);
+        m_CurveInfo = CurveM.Ins.GetCurve(m_HealCurveKey);
     }
 
     void MoveOffset(int createIdx)
@@ -133,6 +144,70 @@ public class UI_Damage : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        m_CurTime += Time.deltaTime;
 
+        float curSpeed = 0;
+        float curSize = 0;
+        float alpha = 0;
+        float curLifeTimePer = 0;
+        switch (m_Type)
+        {
+            case DamageTextType.SkillDamage:
+            case DamageTextType.AttackDamage:
+            case DamageTextType.CriticalAttackDamage:
+            case DamageTextType.TrueDamage:
+                {
+                    curLifeTimePer = m_CurTime / m_DamageLifeTime;
+                    curSpeed = m_DamageCurveSpeedCurve.Evaluate(curLifeTimePer) * m_DamageCurveSpeed;
+                    curSize = m_DamageSizeCurve.Evaluate(curLifeTimePer) * m_DamageFontSize;
+                    alpha = m_DamageFadeAlphaCurve.Evaluate(curLifeTimePer);
+                }
+                break;
+
+            case DamageTextType.HPHeal:
+            case DamageTextType.MPHeal:
+                {
+                    curLifeTimePer = m_CurTime / m_HealLifeTime;
+                    curSpeed = m_HealCurveSpeedCurve.Evaluate(curLifeTimePer) * m_HealCurveSpeed;
+                    curSize = m_HealSizeCurve.Evaluate(curLifeTimePer) * m_HealFontSize;
+                    alpha = m_HealFadeAlphaCurve.Evaluate(curLifeTimePer);
+                }
+                break;
+        }
+        T_Damage.alpha = alpha;
+        T_Damage.fontSize = curSize;
+        float maxCurveDis = m_CurveInfo.GetDistance();
+        m_CurveMoveDis += curSpeed * Time.deltaTime;
+        m_CurveMoveDis = Mathf.Clamp(m_CurveMoveDis, 0, maxCurveDis);
+        Vector3 curvePos = m_CurveInfo.GetPosByDistance(m_CurveMoveDis);
+        transform.position = Util.World2Screen(m_StartWorldPos + curvePos);
+
+        switch (m_Type)
+        {
+            case DamageTextType.SkillDamage:
+            case DamageTextType.AttackDamage:
+            case DamageTextType.CriticalAttackDamage:
+            case DamageTextType.TrueDamage:
+                {
+                    if (m_CurTime >= m_DamageLifeTime)
+                    {
+                        Destroy(gameObject);
+                    }
+                }
+                break;
+
+            case DamageTextType.HPHeal:
+            case DamageTextType.MPHeal:
+                {
+                    if (m_CurTime >= m_HealLifeTime)
+                    {
+                        Destroy(gameObject);
+                    }
+                }
+                break;
+        }
+    }
 
 }

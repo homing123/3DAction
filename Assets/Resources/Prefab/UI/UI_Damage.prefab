@@ -245,3 +245,110 @@ MonoBehaviour:
   m_CreateIdxOffset: 50
   T_Damage: {fileID: 4817920534425461277}
   I_Icon: {fileID: 302119777850611820}
+  m_DamageCurveKey: DamageUI
+  m_DamageCurveSpeed: 5
+  m_DamageCurveSpeedCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0.004241782
+      value: 0.8880952
+      inSlope: 0.17962016
+      outSlope: 0.17962016
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.053303678
+    - serializedVersion: 3
+      time: 0.9989624
+      value: 0.5071411
+      inSlope: -1.944135
+      outSlope: -1.944135
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  m_DamageSizeCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0.0021208907
+      value: 0.49285716
+      inSlope: 1.7169458
+      outSlope: 1.7169458
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.036131777
+    - serializedVersion: 3
+      time: 1
+      value: 0.49761906
+      inSlope: -1.944135
+      outSlope: -1.944135
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  m_DamageFadeAlphaCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: -0.19105409
+      outSlope: -0.19105409
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.72473
+      value: 0.85456157
+      inSlope: -0.69281083
+      outSlope: -0.69281083
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.19870432
+    - serializedVersion: 3
+      time: 1
+      value: 0.0023809525
+      inSlope: -1.944135
+      outSlope: -1.944135
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  m_DamageLifeTime: 0.7
+  m_DamageFontSize: 35
+  m_HealCurveKey: 
+  m_HealCurveSpeed: 0
+  m_HealCurveSpeedCurve:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  m_HealSizeCurve:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  m_HealFadeAlphaCurve:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  m_HealLifeTime: 0
+  m_HealFontSize: 0

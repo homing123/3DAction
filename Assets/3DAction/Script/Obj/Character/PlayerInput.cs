@@ -45,7 +45,6 @@ public class PlayerInput : MonoBehaviour
    
     public static PlayerInput Ins;
     [SerializeField] float m_ScreenMoveWidth = 50;
-
     Vector3 m_MouseGroundPos;
     Character m_CharacterTarget;
     Monster m_MonsterTarget;

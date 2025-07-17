@@ -13,6 +13,7 @@ public class CamM : MonoBehaviour
     [SerializeField] Transform m_Target;
     public Vector2 m_CamScreenRight { get; private set; }
     public Vector2 m_CamScreenForward { get; private set; }
+    [SerializeField] bool m_MoveCam = true;
 
     private void Awake()
     {
@@ -29,6 +30,14 @@ public class CamM : MonoBehaviour
         Vector3 zMove = Vector3.Cross(xMove, Vector3.up).normalized;
         m_CamScreenRight = xMove.VT2XZ();
         m_CamScreenForward = zMove.VT2XZ();
+    }
+
+    private void Update()
+    {
+        if(Input.GetKeyDown(KeyCode.P))
+        {
+            m_MoveCam = !m_MoveCam;
+        }
     }
 
     // Update is called once per frame
@@ -58,11 +67,19 @@ public class CamM : MonoBehaviour
   
     public void CamMove(Vector2 dir)
     {
+        if (m_MoveCam == false)
+        {
+            return;
+        }
         Vector2 moveDis = m_CamScreenRight * dir.x + m_CamScreenForward * dir.y;
         transform.position += moveDis.VT2XZToVT3() * m_CamMoveSpeed;
     }
     public void CamLookTarget(Transform target)
     {
+        if (m_MoveCam == false)
+        {
+            return;
+        }
         transform.position = target.transform.position - transform.forward * m_CamDis;
     }
 #if UNITY_EDITOR

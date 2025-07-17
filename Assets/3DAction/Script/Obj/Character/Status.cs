@@ -248,6 +248,16 @@ public class Status : MonoBehaviour
             //}
         }
     }
+    public void Heal(float healValue)
+    {
+        m_CurHP += healValue;
+        if(m_CurHP > m_TotalMaxHP)
+        {
+            m_CurHP = m_TotalMaxHP;
+        }
+        OnStatusChanged?.Invoke();
+
+    }
     public bool Movable()
     {
         return m_Death == false && m_State == 0;

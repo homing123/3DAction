@@ -11,10 +11,12 @@ public class CamM : MonoBehaviour
 
     [SerializeField] float m_CamMoveSpeed = 0.15f;
     [SerializeField] Transform m_Target;
+    [SerializeField] float m_CamHeightMoveSpeed = 2;
     public Vector2 m_CamScreenRight { get; private set; }
     public Vector2 m_CamScreenForward { get; private set; }
     [SerializeField] bool m_MoveCam = true;
 
+    float m_CurCamHeightDis;
     private void Awake()
     {
         if(Ins != null && Ins != this)
@@ -52,7 +54,21 @@ public class CamM : MonoBehaviour
     {
         if(Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, m_CamDis + 5, Define.D_LayerMask[Layer.Ground]))
         {
-            transform.position = hit.point - transform.forward * m_CamDis;
+            float curCam2GroundDis = Vector3.Distance(hit.point, transform.position);
+            float curMoveSpeed = m_CamHeightMoveSpeed * Time.deltaTime;
+            float moveSign = Mathf.Sign(m_CamDis - curCam2GroundDis);
+            float abs = Mathf.Abs(m_CamDis - curCam2GroundDis);
+            float curCamDis = 0;
+
+            if (abs < curMoveSpeed)
+            {
+                curCamDis = m_CamDis;
+            }
+            else
+            {
+                curCamDis = curCam2GroundDis + moveSign * curMoveSpeed;
+            }
+            transform.position = hit.point - transform.forward * curCamDis;
         }
     }
 

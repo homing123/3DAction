@@ -211,6 +211,7 @@ public class CurveM : MonoBehaviour
             m_EditCurve = new BezierCurveByKey(m_EditCurve.m_ID, GetPointsBySceneCurveEditObjects());
         }    
     }
+
     BezierCurvePoint[] GetPointsBySceneCurveEditObjects()
     {
         CurveEditObject[] sceneCurveEditObjects = GetSceneCurveEditObjects();

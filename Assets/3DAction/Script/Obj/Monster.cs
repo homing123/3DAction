@@ -12,7 +12,6 @@ public class Monster : Bio
     protected override void Awake()
     {
         base.Awake();
-        m_BioType = Bio_Type.Animal;
     }
     protected override void Start()
     {

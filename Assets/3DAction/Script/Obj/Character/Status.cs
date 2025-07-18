@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
-
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 //### 레벨에 따른 증가
 //체력
 //마나
@@ -29,11 +30,6 @@ public class Status : MonoBehaviour
     //기본 스킬 : 움직임 불가능, 스킬시전 불가능
     //이동형 스킬 : 움직임 불가능, 스킬시전 불가능 (스킬로직에서 움직임 처리)
 
-    public enum State
-    {
-        Knockback = 1 << 0,
-        Stun = 1<<1,
-    }
 
     //통일 상수
     const float CriticalDMG = 75f;
@@ -63,17 +59,16 @@ public class Status : MonoBehaviour
     public float m_EXP { get; private set; }
     public int m_Level { get; private set; }
     public int m_SkillLevelUpPoint { get; private set; }
-    public int[] m_SkillLevel = new int[7];
+    int[] m_SkillLevel = new int[7];
+    public ReadOnlyCollection<int> SkillLevel => Array.AsReadOnly(m_SkillLevel);
 
-    State m_State;
     public float HPPercent { get { return m_CurHP / m_TotalMaxHP; } }
-
     public event Action OnDeath; // 죽음 이벤트
     public event Action OnStatusChanged;
-    public event Action<State, State> OnStateChanged; //STATE_1 = xor 이전과 달라진 비트 => 1, STATE_2 = 현재STATE => m_State
     public event Action OnEXPLevelChanged;
     public event Action OnSkillLevelUpPointChanged;
 
+         
     CharacterData m_CharacterData;
 
     Bio m_Bio;
@@ -93,27 +88,12 @@ public class Status : MonoBehaviour
         {
             return;
         }
-        if ((m_State & State.Knockback) > 0)
-        {
-            m_CurKnockbackTime -= Time.deltaTime;
-            if (m_CurKnockbackTime < 0)
-            {
-                SetState(State.Knockback, false);
-            }
-        }
-        if ((m_State & State.Stun) > 0)
-        {
-            m_CurStunTime -= Time.deltaTime;
-            if (m_CurStunTime < 0)
-            {
-                SetState(State.Stun, false);
-            }
-        }
+
     }
 
     void CalculateTotalStatus()
     {
-        switch (m_Bio.m_BioType)
+        switch (m_Bio.BioType)
         {
             case Bio_Type.Character:
                 m_TotalMaxHP = m_CharacterData.HP[m_Level];
@@ -183,17 +163,6 @@ public class Status : MonoBehaviour
         OnSkillLevelUpPointChanged?.Invoke();
     }
 
-   
-
-    
-    
-    void SetState(State state, bool on)
-    {
-        State lastState = m_State;
-        m_State = on ? m_State | state : m_State & (~state);
-        OnStateChanged?.Invoke(lastState ^ m_State, m_State);
-    }
-
     float CalculateDamageAfterDefense(float originalDamage)
     {
         return originalDamage * (100 / (m_TotalArmor + 100));
@@ -258,15 +227,6 @@ public class Status : MonoBehaviour
         OnStatusChanged?.Invoke();
 
     }
-    public bool Movable()
-    {
-        return m_Death == false && m_State == 0;
-    }
-    public bool Skillable()
-    {
-        return m_Death == false && m_State == 0;
-    }
-
 
     public float CalcSkillCooldown(SkillData skillData)
     {
@@ -285,7 +245,7 @@ public class Status : MonoBehaviour
     }
     public float CalcSkillDamage(SkillData skillData, int damageIdx = 0)
     {
-        return m_TotalSkillDmg * skillData.SDMulDamages[damageIdx] + skillData.Damages[damageIdx];
+        return m_TotalSkillDmg * skillData.SDMulDamages[damageIdx] * 0.01f + skillData.Damages[damageIdx];
     }
     public float GetLevelUpEXP()
     {

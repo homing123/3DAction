@@ -1,15 +1,12 @@
-using Unity.VisualScripting;
-using Unity.VisualScripting.Dependencies.Sqlite;
 using UnityEngine;
 using UnityEngine.AI;
-
-public class CharacterMove : MonoBehaviour
+using System;
+public class BioNaviMove : MonoBehaviour
 {
     NavMeshAgent m_NavAgent;
     HumanAnim m_HumanAnim;
-    bool m_CallOnArrived = true;
     Status m_Status;
-    Character m_Character;
+    Bio m_Bio;
     public bool m_IsMove { get { return !m_NavAgent.isStopped; } }
 
     [SerializeField] Transform m_MoveDestiObj;
@@ -18,7 +15,7 @@ public class CharacterMove : MonoBehaviour
         m_NavAgent = GetComponent<NavMeshAgent>();
         m_HumanAnim = GetComponent<HumanAnim>();
         m_Status = GetComponent<Status>();
-        m_Character = GetComponent<Character>();
+        m_Bio = GetComponent<Bio>();
     }
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -42,33 +39,33 @@ public class CharacterMove : MonoBehaviour
     {
         if (m_IsMove == true)
         {
-            m_Character.UpdateAngular(new Vector2(m_NavAgent.velocity.x, m_NavAgent.velocity.z), out bool arrived);
+            m_Bio.UpdateAngular(new Vector2(m_NavAgent.velocity.x, m_NavAgent.velocity.z), out bool arrived);
             CheckMoveArrived();
         }
     }
     void CheckMoveArrived()
     {
         float remainDis = Vector3.Distance(m_NavAgent.destination, transform.position);
-        if (m_CallOnArrived == false && m_NavAgent.pathStatus == NavMeshPathStatus.PathComplete && remainDis < 0.1f)
+        if (m_Bio.m_ActionState == ActionState.Move && m_NavAgent.pathStatus == NavMeshPathStatus.PathComplete && remainDis < 0.1f)
         {
-            m_CallOnArrived = true;
+            //µµÂø
             m_NavAgent.isStopped = true;
-            OnMoveArrived();
+            m_HumanAnim.SetAnimTrigger(Anim_Trigger.Idle);
+            m_Bio.ChangeActionState(ActionState.Idle);
         }
-    }
-    void OnMoveArrived()
-    {
-        m_HumanAnim.SetAnimTrigger(Anim_Trigger.Idle);
     }
     public void Move(Vector3 groundPos)
     {
+        if(m_Bio.CheckMoveable() == false)
+        {
+            return;
+        }
         if (m_MoveDestiObj != null)
         {
             m_MoveDestiObj.transform.position = groundPos;
         }
         m_HumanAnim.SetAnimTrigger(Anim_Trigger.Run);
         m_NavAgent.isStopped = false;
-        m_CallOnArrived = false;
         m_NavAgent.SetDestination(groundPos);
     }
     public void MoveStop()
@@ -76,5 +73,5 @@ public class CharacterMove : MonoBehaviour
         m_NavAgent.isStopped = true;
     }
 
-   
+
 }

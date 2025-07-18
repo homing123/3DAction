@@ -75,7 +75,7 @@ public class UI_SkillIcon : MonoBehaviour
 
     void SetSkillLevel()
     {
-        int curLevel = m_PlayerCharacter.m_Status.m_SkillLevel[(int)m_SkillPos];
+        int curLevel = m_PlayerCharacter.m_Status.SkillLevel[(int)m_SkillPos];
         int maxLevel = m_SkillPosSkill.GetMaxLevel();
         if (m_SkillLevelEnables.Length > 0)
         {

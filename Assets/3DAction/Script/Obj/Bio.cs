@@ -1,10 +1,11 @@
 using System;
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using Cysharp.Threading.Tasks;
 using System.Threading;
-using Unity.VisualScripting.Antlr3.Runtime;
+using Unity.VisualScripting;
+
 public enum Skill_Target_Type
 {
     Monster = 1 << 0,
@@ -18,6 +19,18 @@ public enum Bio_Type
     Character,
     Sandbag,
 }
+public enum ActionState
+{
+    Idle = 0,
+    Move = 1,
+    Attack = 2,
+    Skill = 3,
+}
+public enum CCState
+{
+    Knockback = 0,
+    Stun = 1,
+}
 
 [RequireComponent (typeof(Status))]
 public class Bio : MonoBehaviour
@@ -26,42 +39,196 @@ public class Bio : MonoBehaviour
 
     //공통 애니메이션 이름
 
-    public Status m_Status { get; private set; }
-    public Bio_Type m_BioType { get; protected set; }
-
+    BioNaviMove m_Move;
+    [SerializeField] Bio_Type m_BioType;
     protected bool m_isInit;
+    Vector2 m_LastPos;
+
+
+    float[] m_CCTime;
+    public Status m_Status { get; private set; }
+    public ActionState m_ActionState { get; private set; }
+    public Vector2 m_CurMoveDir { get; private set; }
+    public uint m_CCState { get; private set; }
+
+    public Bio_Type BioType { get { return m_BioType; } }
+    public ReadOnlyCollection<float> CCTime => Array.AsReadOnly(m_CCTime);
+
+
     protected Action OnInitialized;
+    public event Action<ActionState> OnActionStateChanged;
+    [Tooltip("추가된 CC, 제거된 CC")] public event Action<uint, uint> OnCCStateChanged;
+
     protected virtual void Awake()
     {
+        m_Move = GetComponent<BioNaviMove>();
         m_Status = GetComponent<Status>();
+        m_CCTime = new float[EnumArray<CCState>.GetArray().Length];
+
     }
     protected virtual void Start()
     {
+        m_LastPos = transform.position.VT2XZ();
         m_Status.OnDeath += Death;
-        m_Status.OnStateChanged += StateChanged;
         UI_HPBar.Create(this);
     }
     protected virtual void Update()
     {
+        CCTimeUpdate();
+
+        m_CurMoveDir = (transform.position.VT2XZ() - m_LastPos);
+        if(m_CurMoveDir != Vector2.zero)
+        {
+            m_CurMoveDir.Normalize();
+        }
+        m_LastPos = transform.position.VT2XZ();
 
     }
     protected virtual void FixedUpdate()
     {
 
     }
-   
+
+    #region State
+    public void MoveToDesti(Vector3 desti)
+    {
+        ChangeActionState(ActionState.Move);
+        m_Move.Move(desti);
+    }
+    void OnMoveArrived()
+    {
+    }
+    public void ChangeActionState(ActionState actionState)
+    {
+        if (m_ActionState != actionState)
+        {
+            switch(m_ActionState)
+            {
+                case ActionState.Move:
+                    m_Move.MoveStop();
+                    break;
+            }
+
+            m_ActionState = actionState;
+            OnActionStateChanged?.Invoke(m_ActionState);
+
+        }
+    }
+    #region CC
+    void CCTimeUpdate()
+    {
+        for (int i = 0; i < m_CCTime.Length; i++)
+        {
+            if (m_CCTime[i] > 0)
+            {
+                m_CCTime[i] -= Time.deltaTime;
+                if (m_CCTime[i] <= 0)
+                {
+                    m_CCTime[i] = 0;
+                    //cc해제
+                    ReleaseCCState((CCState)i);
+                }
+            }
+
+        }
+    }
+
+    public void AddCCState(CCState cc, float time)
+    {
+        uint ccIdx = (uint)cc;
+        if ((m_CCState & ccIdx) > 0)
+        {
+            m_CCTime[ccIdx] = m_CCTime[ccIdx] < time ? time : m_CCTime[ccIdx];
+        }
+        else
+        {
+            m_CCState |= ccIdx;
+            m_CCTime[ccIdx] = time;
+            OnCCStateChanged?.Invoke(ccIdx, 0);
+        }
+    }
+    public void ReleaseCCState(CCState cc)
+    {
+        uint ccIdx = (uint)cc;
+        if ((m_CCState & ccIdx) > 0)
+        {
+            m_CCState &= ~ccIdx;
+            m_CCTime[ccIdx] = 0;
+            OnCCStateChanged?.Invoke(0, ccIdx);
+        }
+    }
+    #endregion
+    public bool CheckMoveable()
+    {
+        ActionState[] UnableActionState = { ActionState.Skill };
+        for (int i = 0; i < UnableActionState.Length; i++)
+        {
+            if (m_ActionState == UnableActionState[i])
+            {
+                return false;
+            }
+        }
+
+
+        CCState[] UnableCC = { CCState.Knockback, CCState.Stun };
+        for (int i = 0; i < UnableCC.Length; i++)
+        {
+            if ((m_CCState & (uint)UnableCC[i]) > 0)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    public bool CheckAttackable()
+    {
+        ActionState[] UnableActionState = { ActionState.Skill, ActionState.Attack };
+        for (int i = 0; i < UnableActionState.Length; i++)
+        {
+            if (m_ActionState == UnableActionState[i])
+            {
+                return false;
+            }
+        }
+
+
+        CCState[] UnableCC = { CCState.Knockback, CCState.Stun };
+        for (int i = 0; i < UnableCC.Length; i++)
+        {
+            if ((m_CCState & (uint)UnableCC[i]) > 0)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    public bool CheckSkillUseable()
+    {
+        ActionState[] UnableActionState = { ActionState.Skill };
+        for (int i = 0; i < UnableActionState.Length; i++)
+        {
+            if (m_ActionState == UnableActionState[i])
+            {
+                return false;
+            }
+        }
+
+
+        CCState[] UnableCC = { CCState.Knockback, CCState.Stun };
+        for (int i = 0; i < UnableCC.Length; i++)
+        {
+            if ((m_CCState & (uint)UnableCC[i]) > 0)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    #endregion
     void Death()
     {
         Debug.Log("주금");
         Destroy(gameObject, 2f);
-    }
-    void StateChanged(Status.State xorState, Status.State curState)
-    {
-        if (((xorState & Status.State.Knockback) > 0) && ((curState & Status.State.Knockback) > 0))
-        {
-            SkillCancel();
-            //SetAnim(Anim_Knockback);
-        }
     }
     void SkillCancel()
     {
@@ -100,30 +267,39 @@ public class Bio : MonoBehaviour
         m_Status.TakeDamage(in skillAttackInfo);
     }
 
-    protected async UniTask RotToDir(Vector2 dir, CancellationTokenSource cts)
+    protected void RotToDirImmediate(Vector2 dir)
     {
+        Vector3 moveDirHor = new Vector3(dir.x, 0, dir.y);
+        if (moveDirHor == Vector3.zero)
+        {
+            return;
+        }
+        moveDirHor.Normalize();
+        Quaternion curRot = transform.rotation;
+        Quaternion lookRot = Quaternion.LookRotation(moveDirHor, Vector3.up);
+        transform.rotation = lookRot;
+    }
+    protected async UniTask<float> RotToDir(Vector2 dir, CancellationTokenSource cts)
+    {
+        float curRotTime = 0;
         while (true)
         {
             if (cts.Token.IsCancellationRequested)
             {
-                return;
+                return curRotTime;
             }
             await UniTask.Yield();
+            curRotTime += Time.deltaTime;
             UpdateAngular(dir, out bool arrived);
             if(arrived)
             {
                 break;
             }
         }
+        return curRotTime;
     }
 
    
-    
-
-    public static bool CheckisBio(Collider col, out Bio bio)
-    {
-        return col.TryGetComponent(out bio);
-    }
 
     public virtual Vector3 GetHitPos()
     {
@@ -195,6 +371,10 @@ public class Bio : MonoBehaviour
             }
         }
         return false;
+    }
+    public static bool CheckisBio(Collider col, out Bio bio)
+    {
+        return col.TryGetComponent(out bio);
     }
 
 }

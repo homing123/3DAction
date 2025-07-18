@@ -63,12 +63,12 @@ public class SkillPosSkill
     //일단 임시로 매프레임 lateupdate 에서 부르자
     public void CheckState()
     {
-        int skillLevel = m_User.m_Status.m_SkillLevel[(int)m_SkillPos];
+        int skillLevel = m_User.m_Status.SkillLevel[(int)m_SkillPos];
         if (skillLevel == 0)
         {
             m_SkillState = SkillState.Level0;
         }
-        else if (m_User.m_Status.Skillable() == false || m_User.m_IsSkill)
+        else if (m_User.CheckSkillUseable() == false)
         {
             m_SkillState = SkillState.CharacterStateUnUseableSkill;
         }
@@ -88,7 +88,7 @@ public class SkillPosSkill
     }
     public SkillData GetSkillData()
     {
-        int skillLevel = m_User.m_Status.m_SkillLevel[(int)m_SkillPos];
+        int skillLevel = m_User.m_Status.SkillLevel[(int)m_SkillPos];
         if (skillLevel == 0)
         {
             return m_SkillDatas[0];
@@ -108,29 +108,21 @@ public abstract class Character : Bio
     [Tooltip("어택땅 찍었을 때 찍은곳 주변의 적을 찾는 범위 반지름")] const float AttackDestiSearchRange = 8;
     [SerializeField] int m_CharacterID;
 
-    Vector3 m_LastPos;
     CharacterAction m_CharacterAction;
-    Transform m_ObjectTarget;
     float m_CurAttackDelay;
 
     protected Bio m_AttackTarget;
     protected Dictionary<SkillPos, SkillPosSkill> D_SkillPosSkill;
     protected CancellationTokenSource m_SkillCTS;
     protected CancellationTokenSource m_AttackCTS;
-    protected CharacterMove m_Move;
 
     public CharacterData m_CharacterData { get; private set; }
-    public bool m_IsSkill { get; protected set; }
-    public bool m_IsAttack { get; protected set; }
     public int m_TeamID { get; private set; }
-    public Vector3 m_LastMoveDis { get; private set; }
 
     protected override void Awake()
     {
         base.Awake();
         PlayerM.Ins.RegisterCharacter(this);
-        m_BioType = Bio_Type.Character;
-        m_Move = GetComponent<CharacterMove>();
         m_CharacterAction = CharacterAction.Stop;
         SkillPos[] enumArray = EnumArray<SkillPos>.GetArray();
         D_SkillPosSkill = new Dictionary<SkillPos, SkillPosSkill>(enumArray.Length);
@@ -142,7 +134,6 @@ public abstract class Character : Bio
     protected override void Start()
     {
         base.Start();
-        m_LastPos = transform.position;
         PlayerInput.Ins.OnInput += OnInput;
         m_CharacterData = CharacterData.GetData(m_CharacterID);
         m_Status.CharacterStatusInit(m_CharacterData);
@@ -166,8 +157,6 @@ public abstract class Character : Bio
     protected override void FixedUpdate()
     {
         base.FixedUpdate();
-        m_LastMoveDis = transform.position - m_LastPos;
-        m_LastPos = transform.position;
     }
     private void OnDrawGizmos()
     {
@@ -255,17 +244,6 @@ public abstract class Character : Bio
                 }        
                 break;
             case CharacterAction.Move2Desti:
-                if (m_Move.m_IsMove == false)
-                {
-                    if (TryGetNearestTargetAttackRange(out target))
-                    {
-                        SetCharacterAction(CharacterAction.ChaseTarget, default, target);
-                    }
-                    else
-                    {
-                        SetCharacterAction(CharacterAction.Idle);
-                    }
-                }             
                 break;
             case CharacterAction.Move2Object:
                 break;
@@ -335,8 +313,11 @@ public abstract class Character : Bio
         switch (m_CharacterAction)
         {
             case CharacterAction.Move2Desti:
-                CancelAttack();
-                m_Move.Move(groundPos);
+                if (m_ActionState == ActionState.Attack)
+                {
+                    CancelAttack();
+                }
+                ChangeActionState(groundPos, );
                 break;
             case CharacterAction.Move2Object:
                 break;

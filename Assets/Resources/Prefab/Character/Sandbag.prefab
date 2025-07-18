@@ -98,13 +98,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce10d06e07fd2da4f98954b8d6e27e94, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MaxHP: 1000
-  MaxMP: 50
-  AttackDamage: 10
-  SkillDamage: 10
-  Defense: 5
-  MoveSpeed: 5
-  AttackSpeed: 1
 --- !u!114 &8178400246753542952
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -117,6 +110,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 539a504adc6d17042b3f66370af68dd7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_BioType: 2
+  m_IsHeal: 0
 --- !u!1001 &4832869316129354233
 PrefabInstance:
   m_ObjectHideFlags: 0

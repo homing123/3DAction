@@ -252,9 +252,10 @@ public class PlayerInput : MonoBehaviour
             }
         }
     }
-    public Vector2 GetSkillDirVT2(Vector3 userPos)
+    public Vector2 GetUser2MouseVT2(Vector3 userPos)
     {
         Vector3 toMousePos = m_MouseGroundPos - userPos;
-        return toMousePos.VT2XZ().normalized;
+        return toMousePos.VT2XZ();
     }
+
 }

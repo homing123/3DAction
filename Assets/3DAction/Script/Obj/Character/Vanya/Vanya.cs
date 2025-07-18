@@ -74,7 +74,7 @@ public class Vanya : Character
 
         D_SkillPosSkill[SkillPos.Q].SetSkillFunctionAndSkillDatas(m_QSkillDatas, (cts, skillPosSkill) => { QSkill(cts, skillPosSkill).Forget(); });
         D_SkillPosSkill[SkillPos.W].SetSkillFunctionAndSkillDatas(m_WSkillDatas, (cts, skillPosSkill) => { WSkill(cts, skillPosSkill).Forget(); });
-        D_SkillPosSkill[SkillPos.E].SetSkillFunctionAndSkillDatas(m_ESkillDatas, (cts, skillPosSkill) => { WSkill(cts, skillPosSkill).Forget(); });
+        D_SkillPosSkill[SkillPos.E].SetSkillFunctionAndSkillDatas(m_ESkillDatas, (cts, skillPosSkill) => { ESkill(cts, skillPosSkill).Forget(); });
         D_SkillPosSkill[SkillPos.R].SetSkillFunctionAndSkillDatas(m_RSkillDatas, (cts, skillPosSkill) => { WSkill(cts, skillPosSkill).Forget(); });
         D_SkillPosSkill[SkillPos.P].SetSkillFunctionAndSkillDatas(m_P2SkillDatas, (cts, skillPosSkill) => { WSkill(cts, skillPosSkill).Forget(); });
         D_SkillPosSkill[SkillPos.Weapon].SetSkillFunctionAndSkillDatas(m_WeaponSkillDatas, (cts, skillPosSkill) => { WSkill(cts, skillPosSkill).Forget(); });
@@ -95,7 +95,7 @@ public class Vanya : Character
 
     protected override bool TryAttack()
     {
-        if (m_IsSkill || m_IsAttack)
+        if (CheckAttackable())
         {
             return false;
         }
@@ -111,9 +111,9 @@ public class Vanya : Character
 
     async UniTaskVoid BaseAttack(CancellationTokenSource cts)
     {
-        m_IsAttack = true;
+        ChangeActionState(ActionState.Skill);
         Vector2 dir = (m_AttackTarget.transform.position - transform.position).VT2XZ().normalized;
-        await RotToDir(dir, cts);
+        float rotTime = await RotToDir(dir, cts);
         if (cts.IsCancellationRequested)
         {
             return;
@@ -121,7 +121,12 @@ public class Vanya : Character
         bool isCritical = false;
         float damage = m_Status.CalcAttackDamage(out isCritical);
 
-        await Util.WaitDelay(m_AttackPreDelay, cts);
+        float attackPreDelay = m_AttackPreDelay - rotTime;
+        if (attackPreDelay > 0)
+        {
+            await Util.WaitDelay(m_AttackPreDelay, cts);
+        }
+
         if (cts.IsCancellationRequested)
         {
             return;
@@ -138,14 +143,14 @@ public class Vanya : Character
             }
         }
 
-        m_IsAttack = false;
+        ChangeActionState(ActionState.Idle);
     }
     public override void CancelAttack()
     {
-        if (m_IsAttack)
+        if (m_ActionState == ActionState.Attack)
         {
             m_AttackCTS.Cancel();
-            m_IsAttack = false;
+            ChangeActionState(ActionState.Idle);
         }
     }
     public override float GetAttackRange()
@@ -182,7 +187,7 @@ public class Vanya : Character
         }
         if (D_SkillPosSkill[skillPos].m_SkillState == SkillState.Useable)
         {
-            if (m_IsAttack)
+            if (m_ActionState == ActionState.Attack)
             {
                 CancelAttack();
             }
@@ -207,15 +212,12 @@ public class Vanya : Character
     }
     async UniTaskVoid QSkill(CancellationTokenSource cts, SkillPosSkill skillPosSkill)
     {
-        m_IsSkill = true;
+        ChangeActionState(ActionState.Skill);
         SkillData skillData = skillPosSkill.GetSkillData();
         skillPosSkill.CooldownSet(skillData);
-        Vector2 dir = PlayerInput.Ins.GetSkillDirVT2(transform.position);
-        await RotToDir(dir, cts);
-        if (cts.IsCancellationRequested)
-        {
-            return;
-        }
+        Vector2 user2Mouse = PlayerInput.Ins.GetUser2MouseVT2(transform.position);
+        Vector2 dir = user2Mouse.normalized;
+        RotToDirImmediate(dir);
         await Util.WaitDelay(m_QSkillPreDelay, cts);
         if (cts.IsCancellationRequested)
         {
@@ -224,8 +226,7 @@ public class Vanya : Character
         Vanya_Q vanyaQ = Instantiate(m_VanyaQPrefab, m_VanyaQStartPos.position, Quaternion.identity);
         SkillAttackInfo attackInfo = new SkillAttackInfo(this, skillData);
         vanyaQ.Setting(this, dir, m_VanyaQStartPos.localPosition.y, in attackInfo, QSkillReturn2Vanya);
-        m_IsSkill = false;
-
+        ChangeActionState(ActionState.Idle);
     }
     #endregion
     #region WSkill
@@ -245,7 +246,7 @@ public class Vanya : Character
     {
         //w스킬은 5번공격하는 오브젝트를 생성하는 형태로 가자
         //그리고 오브젝트가 생성되어 있는동안 w2번째 스킬을 쓸 수 있는 형태로
-        m_IsSkill = true;
+        ChangeActionState(ActionState.Skill);
         SkillData skillData = skillPosSkill.GetSkillData();
         skillPosSkill.CooldownSet(skillData);
         await Util.WaitDelay(m_W1SkillPreDelay, cts);
@@ -257,18 +258,18 @@ public class Vanya : Character
         //이속증가
         m_VaynaW.Setting(this, skillData, m_WSkillRadius, WSkillEnd);    
         OnWKeyInput += WSkillCancelAndW2SkillCasting;
-        m_IsSkill = false;
         skillPosSkill.SetSkillFunctionAndSkillDatas(m_W2SkillDatas, (cts, skillPosSkill) => { WSecondSkill(cts, skillPosSkill).Forget(); });
         skillPosSkill.CooldownSet(0.5f);
+        ChangeActionState(ActionState.Idle);
     }
 
     async UniTaskVoid WSecondSkill(CancellationTokenSource cts, SkillPosSkill skillPosSkill)
     {
+        ChangeActionState(ActionState.Skill);
         m_VaynaW.Destroy();
         SkillData w2SkillData = skillPosSkill.GetSkillData();
-        int skillLevel = m_Status.m_SkillLevel[(int)skillPosSkill.m_SkillPos];
+        int skillLevel = m_Status.SkillLevel[(int)skillPosSkill.m_SkillPos];
         SkillData w1SkillData = m_WSkillDatas[skillLevel - 1];
-        m_IsSkill = true;
         //이동불가
         //목표지정불가
         HitRangeInfo hitRangeInfo = new HitRangeInfo();
@@ -290,16 +291,60 @@ public class Vanya : Character
         }
         D_SkillPosSkill[SkillPos.W].SetSkillFunctionAndSkillDatas(m_WSkillDatas, (cts,skillPosSkill) => { WSkill(cts, skillPosSkill).Forget(); });
         D_SkillPosSkill[SkillPos.W].CooldownSet(m_Status.CalcSkillCooldown(w2SkillData) + m_Status.CalcSkillCooldown(w1SkillData));
-        m_IsSkill = false;
+        ChangeActionState(ActionState.Idle);
+    }
+    #endregion
+    #region ESkill
+    [SerializeField] float m_ESkillPreDelay;
+    [SerializeField] float m_ESkillDistance;
+    [SerializeField] float m_ESkillCorrectionDis;
+    [SerializeField] float m_ESkillMoveSpeed;
+    async UniTaskVoid ESkill(CancellationTokenSource cts, SkillPosSkill skillPosSkill)
+    {
+        //이동 거리가 짧을수록 preDelay가 짧음
+
+        //e스킬 오브젝트 생성
+        //저지불가
+        ChangeActionState(ActionState.Skill);
+        SkillData skillData = skillPosSkill.GetSkillData();
+        skillPosSkill.CooldownSet(skillData);
+        await Util.WaitDelay(m_ESkillPreDelay, cts);
+        Vector2 user2Mouse = PlayerInput.Ins.GetUser2MouseVT2(transform.position);
+        Vector2 toMouseDir = user2Mouse.normalized;
+        float toMouseDis = user2Mouse.magnitude;
+        float moveDis = toMouseDis > m_ESkillDistance ? m_ESkillDistance: toMouseDis;
+
+        Vector3 desti = transform.position + (moveDis * toMouseDir).VT2XZToVT3();
+        Debug.Log(desti);
+
+        while (true)
+        {
+            transform.position += Util.MoveDesti(transform.position, desti, m_ESkillMoveSpeed * Time.deltaTime, out bool isArrived);
+            if(isArrived)
+            {
+                break;
+            }
+            await UniTask.Yield();
+            if (cts.IsCancellationRequested)
+            {
+                return;
+            }
+        }
+
+        //저지불가 해제
+        //e스킬 오브젝트 제거
+
+        ChangeActionState(ActionState.Idle);
     }
     #endregion
     public override void CancelSkill()
     {
-        if (m_IsSkill)
+        if (m_ActionState == ActionState.Skill)
         {
             m_SkillCTS.Cancel();
-            m_IsSkill = false;
+            ChangeActionState(ActionState.Idle);
         }
     }
     #endregion
+
 }

@@ -75,6 +75,8 @@ public class UI_Damage : MonoBehaviour
     [SerializeField] Image I_Icon;
     DamageTextType m_Type;
     bool m_isLeft;
+    [SerializeField] float m_CurveMultiValue;
+
     [SerializeField] string m_DamageCurveKey;
     [SerializeField] float m_DamageCurveSpeed;
     [SerializeField] AnimationCurve m_DamageCurveSpeedCurve;
@@ -182,7 +184,7 @@ public class UI_Damage : MonoBehaviour
         m_CurveMoveDis += curSpeed * Time.deltaTime;
         m_CurveMoveDis = Mathf.Clamp(m_CurveMoveDis, 0, maxCurveDis);
         Vector3 curvePos = m_CurveInfo.GetPosByDistance(m_CurveMoveDis);
-        transform.position = Util.World2Screen(m_StartWorldPos + curvePos);
+        transform.position = Util.World2Screen(m_StartWorldPos) + new Vector2(curvePos.x, curvePos.y) * m_CurveMultiValue;
 
         switch (m_Type)
         {

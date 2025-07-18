@@ -46,13 +46,13 @@ public class Vanya_Q : MonoBehaviour
             return;
         }
 
-        if(m_User.m_LastMoveDis == Vector3.zero)
+        if(m_User.m_CurMoveDir == Vector2.zero)
         {
             dir = m_User.transform.position.VT2XZ() - transform.position.VT2XZ();
         }
         else
         {
-            Vector2 lastmoveVt2 = m_User.m_LastMoveDis.VT2XZ().normalized;
+            Vector2 lastmoveVt2 = m_User.m_CurMoveDir;
             Vector2 userMovePos = m_User.transform.position.VT2XZ() + lastmoveVt2 * m_SecondDirAddMoveDis;
             dir = userMovePos - transform.position.VT2XZ();
         }
@@ -61,6 +61,7 @@ public class Vanya_Q : MonoBehaviour
         m_DestiVT2 = transform.position.VT2XZ() + m_DirVT2 * m_SecondMoveDis;
 
         transform.LookAt(m_DestiVT2.VT2XZToVT3(transform.position.y));
+        m_HitTarget.Clear();
     }
     void Move()
     {

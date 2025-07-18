@@ -192,6 +192,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c865201a0655624db623a5c4469f2e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_BioType: 1
   m_CharacterID: 1
   m_VanyaAttackPrefab: {fileID: 5649009726109891830, guid: 070177890223f5a4cbad5c6085f638ac, type: 3}
   m_VanyaQPrefab: {fileID: 3573669729248203113, guid: 6f243a16f4d67d049bce01436c82f533, type: 3}
@@ -205,6 +206,10 @@ MonoBehaviour:
   m_W1SkillPreDelay: 0.1
   m_W2TotalAnimTime: 1
   m_W2AttackTime: 0.8
+  m_ESkillPreDelay: 0
+  m_ESkillDistance: 0
+  m_ESkillCorrectionDis: 0
+  m_ESkillMoveSpeed: 0
 --- !u!1001 &6736548421898026665
 PrefabInstance:
   m_ObjectHideFlags: 0

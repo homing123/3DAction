@@ -29,7 +29,8 @@ public class UI_HPBar : MonoBehaviour
         m_MainCam = Camera.main;
         m_Target.m_Status.OnStatusChanged += SetStatus;
         m_Target.m_Status.OnEXPLevelChanged += SetLevel;
-        switch(m_Target.m_BioType)
+        m_Target.m_Status.OnDeath += Destroy;
+        switch (m_Target.BioType)
         {
             case Bio_Type.Character:
                 m_Character = m_Target as Character;
@@ -48,6 +49,7 @@ public class UI_HPBar : MonoBehaviour
     {
         m_Target.m_Status.OnStatusChanged -= SetStatus;
         m_Target.m_Status.OnEXPLevelChanged -= SetLevel;
+        m_Target.m_Status.OnDeath -= Destroy;
     }
 
     private void Update()
@@ -61,7 +63,7 @@ public class UI_HPBar : MonoBehaviour
     }
     void Setting()
     {
-        switch (m_Target.m_BioType)
+        switch (m_Target.BioType    )
         {
             case Bio_Type.Character:
                 T_Name.SetTextID(m_Character.m_CharacterData.Name);
@@ -176,6 +178,10 @@ public class UI_HPBar : MonoBehaviour
                 totalFillAmount--;
             }
         }
+    }
+    void Destroy()
+    {
+        Destroy(this.gameObject, 1);
     }
     
     public static void Create(Bio target)

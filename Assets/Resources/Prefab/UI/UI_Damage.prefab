@@ -109,11 +109,11 @@ RectTransform:
   - {fileID: 1114818860485268648}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 0.5}
+  m_AnchorMax: {x: 0, y: 0.5}
+  m_AnchoredPosition: {x: 950, y: 0}
   m_SizeDelta: {x: 100, y: 50}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_Pivot: {x: 0, y: 0.5}
 --- !u!222 &1236112448452386719
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -245,6 +245,7 @@ MonoBehaviour:
   m_CreateIdxOffset: 50
   T_Damage: {fileID: 4817920534425461277}
   I_Icon: {fileID: 302119777850611820}
+  m_CurveMultiValue: 25
   m_DamageCurveKey: DamageUI
   m_DamageCurveSpeed: 5
   m_DamageCurveSpeedCurve:

@@ -138,79 +138,50 @@ public abstract class Bio : MonoBehaviour
         }
     }
     #endregion
-    //protected bool CheckMoveable()
-    //{
-    //    ActionState[] UnableActionState = { ActionState.Skill };
-    //    for (int i = 0; i < UnableActionState.Length; i++)
-    //    {
-    //        if (m_ActionState == UnableActionState[i])
-    //        {
-    //            return false;
-    //        }
-    //    }
+    protected bool CheckMoveable()
+    {
+        CCState[] UnableCC = { CCState.Knockback, CCState.Stun };
+        for (int i = 0; i < UnableCC.Length; i++)
+        {
+            if ((m_CCState & (uint)UnableCC[i]) > 0)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    protected bool CheckAttackable()
+    {
+        CCState[] UnableCC = { CCState.Knockback, CCState.Stun };
+        for (int i = 0; i < UnableCC.Length; i++)
+        {
+            if ((m_CCState & (uint)UnableCC[i]) > 0)
+            {
+                return false;
+            }
+        }
 
+        float attackDelay = 1 / m_Status.m_TotalAttackSpeed;
+        if (m_CurAttackDelay < attackDelay)
+        {
+            return false;
+        }
+        return true;
 
-    //    CCState[] UnableCC = { CCState.Knockback, CCState.Stun };
-    //    for (int i = 0; i < UnableCC.Length; i++)
-    //    {
-    //        if ((m_CCState & (uint)UnableCC[i]) > 0)
-    //        {
-    //            return false;
-    //        }
-    //    }
-    //    return true;
-    //}
-    //protected bool CheckAttackable()
-    //{
-    //    ActionState[] UnableActionState = { ActionState.Skill, ActionState.Attack };
-    //    for (int i = 0; i < UnableActionState.Length; i++)
-    //    {
-    //        if (m_ActionState == UnableActionState[i])
-    //        {
-    //            return false;
-    //        }
-    //    }
+    }
+    public bool CheckStateSkillUseable()
+    {
+        CCState[] UnableCC = { CCState.Knockback, CCState.Stun };
+        for (int i = 0; i < UnableCC.Length; i++)
+        {
+            if ((m_CCState & (uint)UnableCC[i]) > 0)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
 
-    //    CCState[] UnableCC = { CCState.Knockback, CCState.Stun };
-    //    for (int i = 0; i < UnableCC.Length; i++)
-    //    {
-    //        if ((m_CCState & (uint)UnableCC[i]) > 0)
-    //        {
-    //            return false;
-    //        }
-    //    }
-
-    //    float attackDelay = 1 / m_Status.m_TotalAttackSpeed;
-    //    if (m_CurAttackDelay < attackDelay)
-    //    {
-    //        return false;
-    //    }
-    //    return true;
-
-    //}
-    //public bool CheckStateSkillUseable()
-    //{
-    //    ActionState[] UnableActionState = { ActionState.Skill };
-    //    for (int i = 0; i < UnableActionState.Length; i++)
-    //    {
-    //        if (m_ActionState == UnableActionState[i])
-    //        {
-    //            return false;
-    //        }
-    //    }
-
-
-    //    CCState[] UnableCC = { CCState.Knockback, CCState.Stun };
-    //    for (int i = 0; i < UnableCC.Length; i++)
-    //    {
-    //        if ((m_CCState & (uint)UnableCC[i]) > 0)
-    //        {
-    //            return false;
-    //        }
-    //    }
-    //    return true;
-    //}
-   
     public void AttackOverlap(in HitRangeInfo hitRangeInfo, in SkillAttackInfo dmginfo)
     {
         Collider[] hits = HitRange.Overlap(in hitRangeInfo, out int count);

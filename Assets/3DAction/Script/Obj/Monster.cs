@@ -1,5 +1,7 @@
+using Cysharp.Threading.Tasks;
 using System;
 using System.Collections;
+using System.Threading;
 using UnityEngine;
 
 public class Monster : Bio
@@ -23,6 +25,10 @@ public class Monster : Bio
         //UI_HPBar.Create(m_Status);
     }
 
+    protected override UniTaskVoid BaseAttack(CancellationTokenSource cts)
+    {
+        throw new NotImplementedException();
+    }
     //protected void Update()
     //{
     //    //UpdateMonster();
@@ -71,7 +77,7 @@ public class Monster : Bio
     //    {
     //        return;
     //    }
-        
+
     //    if(m_SkillCurCoolTime > 0)
     //    {
     //        return;

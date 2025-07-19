@@ -1,10 +1,8 @@
 using System;
 using UnityEngine;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Cysharp.Threading.Tasks;
 using System.Threading;
-using Unity.VisualScripting;
 
 public enum Skill_Target_Type
 {
@@ -19,13 +17,6 @@ public enum Bio_Type
     Character,
     Sandbag,
 }
-public enum ActionState
-{
-    Idle = 0,
-    Move = 1,
-    Attack = 2,
-    Skill = 3,
-}
 public enum CCState
 {
     Knockback = 0,
@@ -33,7 +24,7 @@ public enum CCState
 }
 
 [RequireComponent (typeof(Status))]
-public class Bio : MonoBehaviour
+public abstract class Bio : MonoBehaviour
 {
     const float MoveDirAngularSpeed = 1440;
 
@@ -42,26 +33,24 @@ public class Bio : MonoBehaviour
     [SerializeField] Bio_Type m_BioType;
     float m_CurAttackDelay;
     Vector2 m_LastPos;
+    float[] m_CCTime;
+
     protected bool m_isInit;
     protected Bio m_AttackTarget;
     protected CancellationTokenSource m_SkillCTS;
     protected CancellationTokenSource m_AttackCTS;
+    protected IActionState m_CurActionState;
+
     public Vector3 m_MoveDesti { get; private set; }
-
-
-
-    float[] m_CCTime;
-    public Status m_Status { get; private set; }
-    public ActionState m_ActionState { get; private set; }
     public Vector2 m_CurMoveDir { get; private set; }
+    public Status m_Status { get; private set; }
     public uint m_CCState { get; private set; }
-
     public Bio_Type BioType { get { return m_BioType; } }
     public ReadOnlyCollection<float> CCTime => Array.AsReadOnly(m_CCTime);
 
 
     protected Action OnInitialized;
-    public event Action<ActionState> OnActionStateChanged;
+    public event Action OnActionStateChanged;
     public event Action<Vector3> OnMoveDestiChanged;
     [Tooltip("추가된 CC, 제거된 CC")] public event Action<uint, uint> OnCCStateChanged;
 
@@ -81,50 +70,29 @@ public class Bio : MonoBehaviour
     {
         CCTimeUpdate();
         m_CurAttackDelay += Time.deltaTime;
-
-        m_CurMoveDir = (transform.position.VT2XZ() - m_LastPos);
-        if(m_CurMoveDir != Vector2.zero)
-        {
-            m_CurMoveDir.Normalize();
-            UpdateAngular(m_CurMoveDir, out bool arrived);
-
-        }
-        m_LastPos = transform.position.VT2XZ();
-
+        CalcCurMoveDirAndRotateToDir();
+        m_CurActionState.StateUpdate();
     }
     protected virtual void FixedUpdate()
     {
 
     }
 
-    public void ChangeActionState(ActionState actionState, Vector3 moveDesti = default)
+    void Death()
     {
-        Debug.Log(actionState + " " + m_ActionState);
-        m_MoveDesti = moveDesti;
-        OnMoveDestiChanged?.Invoke(m_MoveDesti);
-        if (m_ActionState != actionState)
-        {
-            switch (m_ActionState)
-            {
-                case ActionState.Attack:
-                    CancelAttack();
-                    break;
-            }
-            m_ActionState = actionState;
+        Destroy(gameObject, 2f);
+    }
 
-            switch (actionState)
-            {
-                case ActionState.Idle:
-                    break;
-                case ActionState.Move:
-                    break;
-                case ActionState.Attack:
-                    break;
-                case ActionState.Skill:
-                    break;
-            }
-            OnActionStateChanged?.Invoke(m_ActionState);
-        }  
+    void CalcCurMoveDirAndRotateToDir()
+    {
+        m_CurMoveDir = (transform.position.VT2XZ() - m_LastPos);
+        if (m_CurMoveDir != Vector2.zero)
+        {
+            m_CurMoveDir.Normalize();
+            UpdateAngular(m_CurMoveDir, out bool arrived);
+
+        }
+        m_LastPos = transform.position.VT2XZ();
     }
     #region CC
     void CCTimeUpdate()
@@ -170,82 +138,79 @@ public class Bio : MonoBehaviour
         }
     }
     #endregion
-    protected bool CheckMoveable()
-    {
-        ActionState[] UnableActionState = { ActionState.Skill };
-        for (int i = 0; i < UnableActionState.Length; i++)
-        {
-            if (m_ActionState == UnableActionState[i])
-            {
-                return false;
-            }
-        }
+    //protected bool CheckMoveable()
+    //{
+    //    ActionState[] UnableActionState = { ActionState.Skill };
+    //    for (int i = 0; i < UnableActionState.Length; i++)
+    //    {
+    //        if (m_ActionState == UnableActionState[i])
+    //        {
+    //            return false;
+    //        }
+    //    }
 
 
-        CCState[] UnableCC = { CCState.Knockback, CCState.Stun };
-        for (int i = 0; i < UnableCC.Length; i++)
-        {
-            if ((m_CCState & (uint)UnableCC[i]) > 0)
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-    protected bool CheckAttackable()
-    {
-        ActionState[] UnableActionState = { ActionState.Skill, ActionState.Attack };
-        for (int i = 0; i < UnableActionState.Length; i++)
-        {
-            if (m_ActionState == UnableActionState[i])
-            {
-                return false;
-            }
-        }
+    //    CCState[] UnableCC = { CCState.Knockback, CCState.Stun };
+    //    for (int i = 0; i < UnableCC.Length; i++)
+    //    {
+    //        if ((m_CCState & (uint)UnableCC[i]) > 0)
+    //        {
+    //            return false;
+    //        }
+    //    }
+    //    return true;
+    //}
+    //protected bool CheckAttackable()
+    //{
+    //    ActionState[] UnableActionState = { ActionState.Skill, ActionState.Attack };
+    //    for (int i = 0; i < UnableActionState.Length; i++)
+    //    {
+    //        if (m_ActionState == UnableActionState[i])
+    //        {
+    //            return false;
+    //        }
+    //    }
 
-        CCState[] UnableCC = { CCState.Knockback, CCState.Stun };
-        for (int i = 0; i < UnableCC.Length; i++)
-        {
-            if ((m_CCState & (uint)UnableCC[i]) > 0)
-            {
-                return false;
-            }
-        }
+    //    CCState[] UnableCC = { CCState.Knockback, CCState.Stun };
+    //    for (int i = 0; i < UnableCC.Length; i++)
+    //    {
+    //        if ((m_CCState & (uint)UnableCC[i]) > 0)
+    //        {
+    //            return false;
+    //        }
+    //    }
 
-        float attackDelay = 1 / m_Status.m_TotalAttackSpeed;
-        if (m_CurAttackDelay < attackDelay)
-        {
-            return false;
-        }
-        return true;
+    //    float attackDelay = 1 / m_Status.m_TotalAttackSpeed;
+    //    if (m_CurAttackDelay < attackDelay)
+    //    {
+    //        return false;
+    //    }
+    //    return true;
 
-    }
-    public bool CheckStateSkillUseable()
-    {
-        ActionState[] UnableActionState = { ActionState.Skill };
-        for (int i = 0; i < UnableActionState.Length; i++)
-        {
-            if (m_ActionState == UnableActionState[i])
-            {
-                return false;
-            }
-        }
+    //}
+    //public bool CheckStateSkillUseable()
+    //{
+    //    ActionState[] UnableActionState = { ActionState.Skill };
+    //    for (int i = 0; i < UnableActionState.Length; i++)
+    //    {
+    //        if (m_ActionState == UnableActionState[i])
+    //        {
+    //            return false;
+    //        }
+    //    }
 
 
-        CCState[] UnableCC = { CCState.Knockback, CCState.Stun };
-        for (int i = 0; i < UnableCC.Length; i++)
-        {
-            if ((m_CCState & (uint)UnableCC[i]) > 0)
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-    void Death()
-    {
-        Destroy(gameObject, 2f);
-    }
+    //    CCState[] UnableCC = { CCState.Knockback, CCState.Stun };
+    //    for (int i = 0; i < UnableCC.Length; i++)
+    //    {
+    //        if ((m_CCState & (uint)UnableCC[i]) > 0)
+    //        {
+    //            return false;
+    //        }
+    //    }
+    //    return true;
+    //}
+   
     public void AttackOverlap(in HitRangeInfo hitRangeInfo, in SkillAttackInfo dmginfo)
     {
         Collider[] hits = HitRange.Overlap(in hitRangeInfo, out int count);
@@ -334,26 +299,30 @@ public class Bio : MonoBehaviour
         }
         return curRotTime;
     }
-   
-    #endregion
 
-    protected virtual void Attack()
+    #endregion
+    #region Attack
+    protected void Attack()
     {
         m_CurAttackDelay = 0;
-        if (m_AttackCTS != null)
-        {
-            m_AttackCTS.Dispose();
-        }
         m_AttackCTS = new CancellationTokenSource();
-        ChangeActionState(ActionState.Attack);
+        BaseAttack(m_AttackCTS).Forget();
+    }
+    protected void AttackEnd()
+    {
+        m_AttackCTS.Dispose();
+        m_AttackCTS = null;
     }
     protected void CancelAttack()
     {
-        if (m_ActionState == ActionState.Attack)
+        if (m_AttackCTS != null)
         {
             m_AttackCTS.Cancel();
+            m_AttackCTS.Dispose();
+            m_AttackCTS = null;
         }
     }
+    #endregion
 
     public virtual Vector3 GetHitPos()
     {
@@ -409,4 +378,6 @@ public class Bio : MonoBehaviour
         return col.TryGetComponent(out bio);
     }
 
+
+    protected abstract UniTaskVoid BaseAttack(CancellationTokenSource cts);
 }

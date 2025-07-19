@@ -1,3 +1,5 @@
+using Cysharp.Threading.Tasks;
+using System.Threading;
 using UnityEngine;
 
 public class Sandbag : Bio
@@ -22,5 +24,9 @@ public class Sandbag : Bio
         {
             m_Status.Heal(100);
         }
+    }
+    protected override UniTaskVoid BaseAttack(CancellationTokenSource cts)
+    {
+        throw new System.NotImplementedException();
     }
 }

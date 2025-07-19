@@ -2,21 +2,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System;
 using UnityEngine;
-using static UnityEditor.PlayerSettings;
-
-//타겟서치는 무조건 적 캐릭터 우선임
-//야생동물은 나와 전투상태일때만 자동 타겟에 포함됨
-//전투상태 : 공격을 받거나 주거나 한번이라도 하면 돌아가서 초기화 되기 전까진 공격상태임
-public enum CharacterAction
-{
-    Idle = 0, //가만히 서서 타겟을 찾는 상태, 찾으면 ChaseTarget으로 변경
-    Move2Desti = 1, //움직임 타겟서치x
-    Move2Object = 2, //오브젝트 타겟으로 움직이고 상호작용 거리안에 들어오면 바로 상효작용
-    Stop = 3, //가만히 서서 타겟서치x
-    Hold = 4, //가만히 서서 타겟을 찾되 쫓아가지는 않음
-    AttackDesti = 5, //움직이며 타겟서치, 찾으면 ChaseTarget으로 변경
-    ChaseTarget = 6, //타겟을 쫓아가며 공격 타겟이 죽거나 없어질경우 멈춤
-}
+using Cysharp.Threading.Tasks;
 
 //skillPos 마다 장착된 캐릭터스킬(스킬레벨, 스킬쿨타임, 현재스킬 상태, 레벨별 스킬데이터, 사용자)
 //현재 skillPos에 장착된 캐릭터 스킬이 변할때 불리는 이벤트
@@ -108,17 +94,32 @@ public abstract class Character : Bio
     [Tooltip("어택땅 찍었을 때 찍은곳 주변의 적을 찾는 범위 반지름")] const float AttackDestiSearchRange = 8;
     [SerializeField] int m_CharacterID;
 
-    CharacterAction m_CharacterAction;
+    ActionStateIdle m_ActionStateIdle;
+    ActionStateMoveToDesti m_ActionStateMoveToDesti;
+    ActionStateStop m_ActionStateStop;
+    ActionStateHold m_ActionStateHold;
+    ActionStateAttackDesti m_ActionStateAttackDesti;
+    ActionStateChaseTarget m_ActionStateChaseTarget;
+    ActionStateSkill m_ActionStateSkill;
     protected Dictionary<SkillPos, SkillPosSkill> D_SkillPosSkill;
 
     public CharacterData m_CharacterData { get; private set; }
     public int m_TeamID { get; private set; }
 
+
+
     protected override void Awake()
     {
         base.Awake();
         PlayerM.Ins.RegisterCharacter(this);
-        m_CharacterAction = CharacterAction.Stop;
+        m_ActionStateIdle = new ActionStateIdle(this);
+        m_ActionStateMoveToDesti = new ActionStateMoveToDesti(this);
+        m_ActionStateStop = new ActionStateStop(this);
+        m_ActionStateHold = new ActionStateHold(this);
+        m_ActionStateAttackDesti = new ActionStateAttackDesti(this);
+        m_ActionStateChaseTarget = new ActionStateChaseTarget(this);
+        m_ActionStateSkill = new ActionStateSkill(this);
+        m_CurActionState = m_ActionStateIdle;
         SkillPos[] enumArray = EnumArray<SkillPos>.GetArray();
         D_SkillPosSkill = new Dictionary<SkillPos, SkillPosSkill>(enumArray.Length);
         for(int i=0;i<enumArray.Length;i++)
@@ -137,7 +138,6 @@ public abstract class Character : Bio
     {
         base.Update();
         SkillCooldownUpdate();
-        CharacterActionUpdate();
     }
     protected virtual void LateUpdate()
     {
@@ -178,36 +178,42 @@ public abstract class Character : Bio
         switch (info.command)
         {
             case InputCommandType.Move2GroundPos:
-                SetCharacterAction(CharacterAction.Move2Desti, info.groundPos);
+                m_CurActionState = m_ActionStateMoveToDesti;
+                m_ActionStateMoveToDesti.SetMoveDesti(info.groundPos);
                 break;
             case InputCommandType.Move2ObjectTarget:
-                SetCharacterAction(CharacterAction.Move2Object, default, null, info.objectTarget);
+                //SetCharacterAction(CharacterAction.Move2Object, default, null, info.objectTarget);
                 break;
             case InputCommandType.Stop:
-                SetCharacterAction(CharacterAction.Stop);
+                m_CurActionState = m_ActionStateStop;
                 break;
             case InputCommandType.Hold:
-                SetCharacterAction(CharacterAction.Hold);
+                m_CurActionState = m_ActionStateHold;
                 break;
             case InputCommandType.AttackDesti:
-                SetCharacterAction(CharacterAction.AttackDesti, info.groundPos);
+                m_CurActionState = m_ActionStateAttackDesti;
+                m_ActionStateAttackDesti.SetMoveDesti(info.groundPos);
                 break;
             case InputCommandType.ChaseTarget2Monster:
-                SetCharacterAction(CharacterAction.ChaseTarget, default, info.monsterTarget);
+                m_CurActionState = m_ActionStateChaseTarget;
+                m_ActionStateChaseTarget.SetTarget(info.monsterTarget);
                 break;
             case InputCommandType.ChaseTarget2Character:
-                SetCharacterAction(CharacterAction.ChaseTarget, default, info.characterTarget);
+                m_CurActionState = m_ActionStateChaseTarget;
+                m_ActionStateChaseTarget.SetTarget(info.characterTarget);
                 break;
             case InputCommandType.UseSkill:
-                TryUseSkill(info.skillKey);
+                m_CurActionState = m_ActionStateSkill;
+                //TryUseSkill(info.skillKey);
                 break;
         }
+        m_CurActionState.StateChange();
     }
-    bool TryGetNearestTargetAttackRange(out Bio target)
+    bool GetNearestTargetAttackRange(out Bio target)
     {
-        return TryGetNearestTarget(transform.position, GetAttackRange(), out target);
+        return GetNearestTarget(transform.position, GetAttackRange(), out target);
     }
-    bool TryGetNearestTarget(Vector3 pos, float radius, out Bio target)
+    bool GetNearestTarget(Vector3 pos, float radius, out Bio target)
     {
         target = null;
         float closestSqrDist = float.MaxValue;
@@ -238,145 +244,197 @@ public abstract class Character : Bio
 
         return target != null;
     }
-    void CharacterActionUpdate()
+    //void CharacterActionUpdate()
+    //{
+    //    if (CharacterActionable() == false)
+    //    {
+    //        SetCharacterAction(CharacterAction.Idle);
+    //        return;
+    //    }
+    //    Bio target = null;
+    //    switch(m_CharacterAction)
+    //    {
+    //        case CharacterAction.Idle:
+    //            if (TryGetNearestTargetAttackRange(out target))
+    //            {
+    //                SetCharacterAction(CharacterAction.ChaseTarget, default, target);
+    //            }        
+    //            break;
+    //        case CharacterAction.Move2Desti:
+    //            if(m_ActionState == ActionState.Idle)
+    //            {
+    //                SetCharacterAction(CharacterAction.Idle);
+    //            }
+    //            break;
+    //        case CharacterAction.Move2Object:
+    //            break;
+    //        case CharacterAction.Stop:
+    //            break;
+    //        case CharacterAction.Hold:
+    //            bool targetInRange = false;
+    //            if(m_AttackTarget == null)
+    //            {
+    //                //사거리 안의 가장 가까운 적 탐색
+    //                if (TryGetNearestTargetAttackRange(out target))
+    //                {
+    //                    m_AttackTarget = target;
+    //                    targetInRange = true;
+    //                }
+    //            }
+    //            else
+    //            {
+    //                float dis2Target = (m_AttackTarget.transform.position - transform.position).VT2XZ().magnitude;
+    //                if (dis2Target <= GetAttackRange())
+    //                {
+    //                    targetInRange = true;
+    //                }
+    //                else
+    //                {
+    //                    m_AttackTarget = null;
+    //                    if (TryGetNearestTargetAttackRange(out target))
+    //                    {
+    //                        m_AttackTarget = target;
+    //                        targetInRange = true;
+    //                    }
+    //                }
+    //            }
+    //            if (targetInRange && CheckAttackable())
+    //            {
+    //                Attack();
+    //            }
+    //            break;
+    //        case CharacterAction.AttackDesti:
+    //            if (TryGetNearestTargetAttackRange(out target))
+    //            {
+    //                SetCharacterAction(CharacterAction.ChaseTarget, default, m_AttackTarget);
+    //            }
+    //            break;
+    //        case CharacterAction.ChaseTarget:
+    //            if(m_AttackTarget == null)
+    //            {
+    //                SetCharacterAction(CharacterAction.Idle);
+    //            }
+    //            else
+    //            {
+    //                float dis2Target = (m_AttackTarget.transform.position - transform.position).VT2XZ().magnitude;
+    //                if (dis2Target > GetAttackRange())
+    //                {
+    //                    ChangeActionState(ActionState.Move, m_AttackTarget.transform.position);
+    //                }
+    //                else
+    //                {
+    //                    ChangeActionState(ActionState.Idle);
+    //                    if (CheckAttackable())
+    //                    {
+    //                        Attack();
+    //                    }
+    //                }
+    //            }
+    //            break;
+    //    }
+    //}
+
+    //void SetCharacterAction(CharacterAction CharacterAction, Vector3 groundPos = default, Bio target = null, Transform obj = null)
+    //{
+    //    m_CharacterAction = CharacterAction;
+    //    m_AttackTarget = null;
+
+    //    switch (m_CharacterAction)
+    //    {
+    //        case CharacterAction.Move2Desti:
+    //            ChangeActionState(ActionState.Move, groundPos);
+    //            break;
+    //        case CharacterAction.Move2Object:
+    //            break;
+    //        case CharacterAction.Stop:
+    //            ChangeActionState(ActionState.Idle);
+    //            break;
+    //        case CharacterAction.Hold:
+    //            ChangeActionState(ActionState.Idle);
+    //            break;
+    //        case CharacterAction.AttackDesti:
+    //            Bio nearestTarget = null;
+    //            if(TryGetNearestTarget(groundPos, AttackDestiSearchRange, out nearestTarget))
+    //            {
+    //                SetCharacterAction(CharacterAction.ChaseTarget, default, nearestTarget);
+    //            }
+    //            else
+    //            {
+    //                if (TryGetNearestTargetAttackRange(out nearestTarget))
+    //                {
+    //                    SetCharacterAction(CharacterAction.ChaseTarget, default, nearestTarget);
+    //                }
+    //                else
+    //                {
+    //                    ChangeActionState(ActionState.Move, groundPos);
+    //                }
+    //            }
+    //            break;
+    //        case CharacterAction.ChaseTarget:
+    //            if(m_AttackTarget != null && m_AttackTarget != target)
+    //            {
+    //                CancelAttack();
+    //            }
+    //            m_AttackTarget = target;
+    //            break;
+    //    }
+    //}
+    bool TryUseSkill(KeyCode key)
     {
-        if (CharacterActionable() == false)
+        SkillPos skillPos = SkillPos.Q;
+        switch (key)
         {
-            SetCharacterAction(CharacterAction.Idle);
-            return;
+            case KeyCode.Q:
+                skillPos = SkillPos.Q;
+                break;
+            case KeyCode.W:
+                skillPos = SkillPos.W;
+                break;
+            case KeyCode.E:
+                skillPos = SkillPos.E;
+                break;
+            case KeyCode.R:
+                skillPos = SkillPos.R;
+                break;
+            case KeyCode.D:
+                skillPos = SkillPos.Weapon;
+                break;
+            case KeyCode.F:
+                skillPos = SkillPos.Spell;
+                break;
+            default:
+                return false;
         }
-        Bio target = null;
-        switch(m_CharacterAction)
+        if (D_SkillPosSkill[skillPos].m_SkillState == SkillState.Useable)
         {
-            case CharacterAction.Idle:
-                if (TryGetNearestTargetAttackRange(out target))
-                {
-                    SetCharacterAction(CharacterAction.ChaseTarget, default, target);
-                }        
-                break;
-            case CharacterAction.Move2Desti:
-                if(m_ActionState == ActionState.Idle)
-                {
-                    SetCharacterAction(CharacterAction.Idle);
-                }
-                break;
-            case CharacterAction.Move2Object:
-                break;
-            case CharacterAction.Stop:
-                break;
-            case CharacterAction.Hold:
-                bool targetInRange = false;
-                if(m_AttackTarget == null)
-                {
-                    //사거리 안의 가장 가까운 적 탐색
-                    if (TryGetNearestTargetAttackRange(out target))
-                    {
-                        m_AttackTarget = target;
-                        targetInRange = true;
-                    }
-                }
-                else
-                {
-                    float dis2Target = (m_AttackTarget.transform.position - transform.position).VT2XZ().magnitude;
-                    if (dis2Target <= GetAttackRange())
-                    {
-                        targetInRange = true;
-                    }
-                    else
-                    {
-                        m_AttackTarget = null;
-                        if (TryGetNearestTargetAttackRange(out target))
-                        {
-                            m_AttackTarget = target;
-                            targetInRange = true;
-                        }
-                    }
-                }
-                if (targetInRange && CheckAttackable())
-                {
-                    Attack();
-                }
-                break;
-            case CharacterAction.AttackDesti:
-                if (TryGetNearestTargetAttackRange(out target))
-                {
-                    SetCharacterAction(CharacterAction.ChaseTarget, default, m_AttackTarget);
-                }
-                break;
-            case CharacterAction.ChaseTarget:
-                if(m_AttackTarget == null)
-                {
-                    SetCharacterAction(CharacterAction.Idle);
-                }
-                else
-                {
-                    float dis2Target = (m_AttackTarget.transform.position - transform.position).VT2XZ().magnitude;
-                    if (dis2Target > GetAttackRange())
-                    {
-                        ChangeActionState(ActionState.Move, m_AttackTarget.transform.position);
-                    }
-                    else
-                    {
-                        ChangeActionState(ActionState.Idle);
-                        if (CheckAttackable())
-                        {
-                            Attack();
-                        }
-                    }
-                }
-                break;
+            CancelAttack();
+            if (m_SkillCTS != null)
+            {
+                m_SkillCTS.Dispose();
+            }
+            m_SkillCTS = new CancellationTokenSource();
+            D_SkillPosSkill[skillPos].ac_SkillFunction?.Invoke(m_SkillCTS, D_SkillPosSkill[skillPos]);
+            return true;
+        }
+        else
+        {
+            UI_SkillFailText.SetSkillState(D_SkillPosSkill[skillPos].m_SkillState);
+            return false;
         }
     }
-
-    void SetCharacterAction(CharacterAction CharacterAction, Vector3 groundPos = default, Bio target = null, Transform obj = null)
+    void SkillEnd()
     {
-        m_CharacterAction = CharacterAction;
-        m_AttackTarget = null;
-
-        switch (m_CharacterAction)
-        {
-            case CharacterAction.Move2Desti:
-                ChangeActionState(ActionState.Move, groundPos);
-                break;
-            case CharacterAction.Move2Object:
-                break;
-            case CharacterAction.Stop:
-                ChangeActionState(ActionState.Idle);
-                break;
-            case CharacterAction.Hold:
-                ChangeActionState(ActionState.Idle);
-                break;
-            case CharacterAction.AttackDesti:
-                Bio nearestTarget = null;
-                if(TryGetNearestTarget(groundPos, AttackDestiSearchRange, out nearestTarget))
-                {
-                    SetCharacterAction(CharacterAction.ChaseTarget, default, nearestTarget);
-                }
-                else
-                {
-                    if (TryGetNearestTargetAttackRange(out nearestTarget))
-                    {
-                        SetCharacterAction(CharacterAction.ChaseTarget, default, nearestTarget);
-                    }
-                    else
-                    {
-                        ChangeActionState(ActionState.Move, groundPos);
-                    }
-                }
-                break;
-            case CharacterAction.ChaseTarget:
-                if(m_AttackTarget != null && m_AttackTarget != target)
-                {
-                    CancelAttack();
-                }
-                m_AttackTarget = target;
-                break;
-        }
+        m_SkillCTS.Dispose();
+        m_SkillCTS = null;
     }
-
-    public void SetTeamID(int teamid)
+    void SkillCancel()
     {
-        m_TeamID = teamid;
+        if(m_SkillCTS != null)
+        {
+            m_SkillCTS.Cancel();
+            m_SkillCTS.Dispose();
+            m_SkillCTS = null;
+        }
     }
     protected virtual void SkillCooldownUpdate()
     {
@@ -407,8 +465,9 @@ public abstract class Character : Bio
     }
    
     
-    protected abstract bool TryUseSkill(KeyCode key);
     public abstract float GetAttackRange();
-
-    public abstract void CancelSkill();
+    protected abstract UniTaskVoid QSkill(CancellationTokenSource cts, SkillPosSkill skillPosSkill);
+    protected abstract UniTaskVoid WSkill(CancellationTokenSource cts, SkillPosSkill skillPosSkill);
+    protected abstract UniTaskVoid ESkill(CancellationTokenSource cts, SkillPosSkill skillPosSkill);
+    protected abstract UniTaskVoid RSkill(CancellationTokenSource cts, SkillPosSkill skillPosSkill);
 }

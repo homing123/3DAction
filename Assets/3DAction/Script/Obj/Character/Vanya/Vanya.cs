@@ -75,7 +75,7 @@ public class Vanya : Character
         D_SkillPosSkill[SkillPos.Q].SetSkillFunctionAndSkillDatas(m_QSkillDatas, (cts, skillPosSkill) => { QSkill(cts, skillPosSkill).Forget(); });
         D_SkillPosSkill[SkillPos.W].SetSkillFunctionAndSkillDatas(m_WSkillDatas, (cts, skillPosSkill) => { WSkill(cts, skillPosSkill).Forget(); });
         D_SkillPosSkill[SkillPos.E].SetSkillFunctionAndSkillDatas(m_ESkillDatas, (cts, skillPosSkill) => { ESkill(cts, skillPosSkill).Forget(); });
-        D_SkillPosSkill[SkillPos.R].SetSkillFunctionAndSkillDatas(m_RSkillDatas, (cts, skillPosSkill) => { WSkill(cts, skillPosSkill).Forget(); });
+        D_SkillPosSkill[SkillPos.R].SetSkillFunctionAndSkillDatas(m_RSkillDatas, (cts, skillPosSkill) => { RSkill(cts, skillPosSkill).Forget(); });
         D_SkillPosSkill[SkillPos.P].SetSkillFunctionAndSkillDatas(m_P2SkillDatas, (cts, skillPosSkill) => { WSkill(cts, skillPosSkill).Forget(); });
         D_SkillPosSkill[SkillPos.Weapon].SetSkillFunctionAndSkillDatas(m_WeaponSkillDatas, (cts, skillPosSkill) => { WSkill(cts, skillPosSkill).Forget(); });
         D_SkillPosSkill[SkillPos.Spell].SetSkillFunctionAndSkillDatas(m_SpellSkillDatas, (cts, skillPosSkill) => { WSkill(cts, skillPosSkill).Forget(); });
@@ -91,16 +91,7 @@ public class Vanya : Character
     {
         base.LateUpdate();
     }
-    #region Attack
-
-    protected override void Attack()
-    {
-        base.Attack();
-        BaseAttack(m_AttackCTS).Forget();
-    }
-
-
-    async UniTaskVoid BaseAttack(CancellationTokenSource cts)
+    protected override async UniTaskVoid BaseAttack(CancellationTokenSource cts)
     {
         Vector2 dir = (m_AttackTarget.transform.position - transform.position).VT2XZ().normalized;
         float rotTime = await RotToDir(dir, cts);
@@ -134,69 +125,21 @@ public class Vanya : Character
             }
         }
 
-        ChangeActionState(ActionState.Idle);
+        AttackEnd();
     }
    
     public override float GetAttackRange()
     {
         return m_Status.m_TotalAttackRange;
     }
-    #endregion
-    #region Skill
-    protected override bool TryUseSkill(KeyCode key)
-    {
-        SkillPos skillPos = SkillPos.Q;
-        switch (key)
-        {
-            case KeyCode.Q:
-                skillPos = SkillPos.Q;
-                break;
-            case KeyCode.W:
-                skillPos = SkillPos.W;
-                break;
-            case KeyCode.E:
-                skillPos = SkillPos.E;
-                break;
-            case KeyCode.R:
-                skillPos = SkillPos.R;
-                break;
-            case KeyCode.D:
-                skillPos = SkillPos.Weapon;
-                break;
-            case KeyCode.F:
-                skillPos = SkillPos.Spell;
-                break;
-            default:
-                return false;
-        }
-        if (D_SkillPosSkill[skillPos].m_SkillState == SkillState.Useable)
-        {
-            if (m_ActionState == ActionState.Attack)
-            {
-                CancelAttack();
-            }
-            if (m_SkillCTS != null)
-            {
-                m_SkillCTS.Dispose();
-            }
-            m_SkillCTS = new CancellationTokenSource();
-            D_SkillPosSkill[skillPos].ac_SkillFunction?.Invoke(m_SkillCTS, D_SkillPosSkill[skillPos]);
-            return true;
-        }
-        else
-        {
-            UI_SkillFailText.SetSkillState(D_SkillPosSkill[skillPos].m_SkillState);
-            return false;
-        }
-    }
+   
     #region QSkill
     void QSkillReturn2Vanya()
     {
         D_SkillPosSkill[SkillPos.Q].CooldownReduction(4);
     }
-    async UniTaskVoid QSkill(CancellationTokenSource cts, SkillPosSkill skillPosSkill)
+    protected override async UniTaskVoid QSkill(CancellationTokenSource cts, SkillPosSkill skillPosSkill)
     {
-        ChangeActionState(ActionState.Skill);
         SkillData skillData = skillPosSkill.GetSkillData();
         skillPosSkill.CooldownSet(skillData);
         Vector2 user2Mouse = PlayerInput.Ins.GetUser2MouseVT2(transform.position);
@@ -210,7 +153,7 @@ public class Vanya : Character
         Vanya_Q vanyaQ = Instantiate(m_VanyaQPrefab, m_VanyaQStartPos.position, Quaternion.identity);
         SkillAttackInfo attackInfo = new SkillAttackInfo(this, skillData);
         vanyaQ.Setting(this, dir, m_VanyaQStartPos.localPosition.y, in attackInfo, QSkillReturn2Vanya);
-        ChangeActionState(ActionState.Idle);
+        WSkillEnd();
     }
     #endregion
     #region WSkill
@@ -329,6 +272,5 @@ public class Vanya : Character
             ChangeActionState(ActionState.Idle);
         }
     }
-    #endregion
 
 }

@@ -7,6 +7,8 @@ public class BioNaviMove : MonoBehaviour
     Status m_Status;
     Bio m_Bio;
 
+    Action OnArrived;
+    public bool IsMove { get { return !m_NavAgent.isStopped; } }
     [SerializeField] Transform m_MoveDestiObj;
     private void Awake()
     {
@@ -20,26 +22,6 @@ public class BioNaviMove : MonoBehaviour
         m_NavAgent.updateRotation = false;
         m_NavAgent.speed = m_Status.m_TotalMoveSpeed;
         m_Status.OnStatusChanged += OnStatusChanged;
-        m_Bio.OnActionStateChanged += OnActionStateChanged;
-        m_Bio.OnMoveDestiChanged += OnMoveDestiChanged;
-    }
-    void OnMoveDestiChanged(Vector3 desti)
-    {
-        if (m_Bio.m_ActionState == ActionState.Move)
-        {
-            MoveToDesti(m_Bio.m_MoveDesti);
-        }
-    }
-    void OnActionStateChanged(ActionState state)
-    {
-        if(m_Bio.m_ActionState == ActionState.Move)
-        {
-            MoveToDesti(m_Bio.m_MoveDesti);
-        }
-        else
-        {
-            MoveStop();
-        }
     }
     void OnStatusChanged()
     {
@@ -56,14 +38,14 @@ public class BioNaviMove : MonoBehaviour
     void CheckMoveArrived()
     {
         float remainDis = Vector3.Distance(m_NavAgent.destination, transform.position);
-        if (m_NavAgent.pathStatus == NavMeshPathStatus.PathComplete && remainDis < 0.1f)
+        if (m_NavAgent.isStopped == false && m_NavAgent.pathStatus == NavMeshPathStatus.PathComplete && remainDis < 0.1f)
         {
             //µµÂø
             m_NavAgent.isStopped = true;
-            m_Bio.ChangeActionState(ActionState.Idle);
+            OnArrived?.Invoke();
         }
     }
-    void MoveToDesti(Vector3 desti)
+    void MoveToDesti(Vector3 desti, Action acArrived = null)
     {
         if (m_MoveDestiObj != null)
         {
@@ -71,6 +53,7 @@ public class BioNaviMove : MonoBehaviour
         }
         m_NavAgent.isStopped = false;
         m_NavAgent.SetDestination(desti);
+        OnArrived = acArrived;
     }
     void MoveStop()
     {

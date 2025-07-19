@@ -460,7 +460,6 @@ namespace HMCurve
             }
             float lerpValue = 0;
             int idx = 0;
-            Debug.Log(m_DisWeight.Length);
             for (int i = 0; i < m_DisWeight.Length; i++)
             {
                 if (t < m_DisWeight[i])

@@ -39,10 +39,15 @@ public class Bio : MonoBehaviour
 
     //공통 애니메이션 이름
 
-    BioNaviMove m_Move;
     [SerializeField] Bio_Type m_BioType;
-    protected bool m_isInit;
+    float m_CurAttackDelay;
     Vector2 m_LastPos;
+    protected bool m_isInit;
+    protected Bio m_AttackTarget;
+    protected CancellationTokenSource m_SkillCTS;
+    protected CancellationTokenSource m_AttackCTS;
+    public Vector3 m_MoveDesti { get; private set; }
+
 
 
     float[] m_CCTime;
@@ -57,11 +62,11 @@ public class Bio : MonoBehaviour
 
     protected Action OnInitialized;
     public event Action<ActionState> OnActionStateChanged;
+    public event Action<Vector3> OnMoveDestiChanged;
     [Tooltip("추가된 CC, 제거된 CC")] public event Action<uint, uint> OnCCStateChanged;
 
     protected virtual void Awake()
     {
-        m_Move = GetComponent<BioNaviMove>();
         m_Status = GetComponent<Status>();
         m_CCTime = new float[EnumArray<CCState>.GetArray().Length];
 
@@ -75,11 +80,14 @@ public class Bio : MonoBehaviour
     protected virtual void Update()
     {
         CCTimeUpdate();
+        m_CurAttackDelay += Time.deltaTime;
 
         m_CurMoveDir = (transform.position.VT2XZ() - m_LastPos);
         if(m_CurMoveDir != Vector2.zero)
         {
             m_CurMoveDir.Normalize();
+            UpdateAngular(m_CurMoveDir, out bool arrived);
+
         }
         m_LastPos = transform.position.VT2XZ();
 
@@ -89,30 +97,34 @@ public class Bio : MonoBehaviour
 
     }
 
-    #region State
-    public void MoveToDesti(Vector3 desti)
+    public void ChangeActionState(ActionState actionState, Vector3 moveDesti = default)
     {
-        ChangeActionState(ActionState.Move);
-        m_Move.Move(desti);
-    }
-    void OnMoveArrived()
-    {
-    }
-    public void ChangeActionState(ActionState actionState)
-    {
+        Debug.Log(actionState + " " + m_ActionState);
+        m_MoveDesti = moveDesti;
+        OnMoveDestiChanged?.Invoke(m_MoveDesti);
         if (m_ActionState != actionState)
         {
-            switch(m_ActionState)
+            switch (m_ActionState)
             {
-                case ActionState.Move:
-                    m_Move.MoveStop();
+                case ActionState.Attack:
+                    CancelAttack();
                     break;
             }
-
             m_ActionState = actionState;
-            OnActionStateChanged?.Invoke(m_ActionState);
 
-        }
+            switch (actionState)
+            {
+                case ActionState.Idle:
+                    break;
+                case ActionState.Move:
+                    break;
+                case ActionState.Attack:
+                    break;
+                case ActionState.Skill:
+                    break;
+            }
+            OnActionStateChanged?.Invoke(m_ActionState);
+        }  
     }
     #region CC
     void CCTimeUpdate()
@@ -158,7 +170,7 @@ public class Bio : MonoBehaviour
         }
     }
     #endregion
-    public bool CheckMoveable()
+    protected bool CheckMoveable()
     {
         ActionState[] UnableActionState = { ActionState.Skill };
         for (int i = 0; i < UnableActionState.Length; i++)
@@ -180,7 +192,7 @@ public class Bio : MonoBehaviour
         }
         return true;
     }
-    public bool CheckAttackable()
+    protected bool CheckAttackable()
     {
         ActionState[] UnableActionState = { ActionState.Skill, ActionState.Attack };
         for (int i = 0; i < UnableActionState.Length; i++)
@@ -191,7 +203,6 @@ public class Bio : MonoBehaviour
             }
         }
 
-
         CCState[] UnableCC = { CCState.Knockback, CCState.Stun };
         for (int i = 0; i < UnableCC.Length; i++)
         {
@@ -200,9 +211,16 @@ public class Bio : MonoBehaviour
                 return false;
             }
         }
+
+        float attackDelay = 1 / m_Status.m_TotalAttackSpeed;
+        if (m_CurAttackDelay < attackDelay)
+        {
+            return false;
+        }
         return true;
+
     }
-    public bool CheckSkillUseable()
+    public bool CheckStateSkillUseable()
     {
         ActionState[] UnableActionState = { ActionState.Skill };
         for (int i = 0; i < UnableActionState.Length; i++)
@@ -224,15 +242,9 @@ public class Bio : MonoBehaviour
         }
         return true;
     }
-    #endregion
     void Death()
     {
-        Debug.Log("주금");
         Destroy(gameObject, 2f);
-    }
-    void SkillCancel()
-    {
-
     }
     public void AttackOverlap(in HitRangeInfo hitRangeInfo, in SkillAttackInfo dmginfo)
     {
@@ -267,6 +279,30 @@ public class Bio : MonoBehaviour
         m_Status.TakeDamage(in skillAttackInfo);
     }
 
+    #region Rotate
+    void UpdateAngular(Vector2 dir, out bool arrived)
+    {
+        Vector3 moveDirHor = new Vector3(dir.x, 0, dir.y);
+        if (moveDirHor == Vector3.zero)
+        {
+            arrived = false;
+            return;
+        }
+        moveDirHor.Normalize();
+        Quaternion curRot = transform.rotation;
+        Quaternion lookRot = Quaternion.LookRotation(moveDirHor, Vector3.up);
+        float maxDegree = MoveDirAngularSpeed * Time.deltaTime;
+        if (Quaternion.Angle(curRot, lookRot) < maxDegree)
+        {
+            transform.rotation = lookRot;
+            arrived = true;
+        }
+        else
+        {
+            transform.rotation = Quaternion.RotateTowards(curRot, lookRot, maxDegree);
+            arrived = false;
+        }
+    }
     protected void RotToDirImmediate(Vector2 dir)
     {
         Vector3 moveDirHor = new Vector3(dir.x, 0, dir.y);
@@ -298,8 +334,26 @@ public class Bio : MonoBehaviour
         }
         return curRotTime;
     }
-
    
+    #endregion
+
+    protected virtual void Attack()
+    {
+        m_CurAttackDelay = 0;
+        if (m_AttackCTS != null)
+        {
+            m_AttackCTS.Dispose();
+        }
+        m_AttackCTS = new CancellationTokenSource();
+        ChangeActionState(ActionState.Attack);
+    }
+    protected void CancelAttack()
+    {
+        if (m_ActionState == ActionState.Attack)
+        {
+            m_AttackCTS.Cancel();
+        }
+    }
 
     public virtual Vector3 GetHitPos()
     {
@@ -309,29 +363,7 @@ public class Bio : MonoBehaviour
     {
         return transform.position + Vector3.up * 1.8f;
     }
-    public void UpdateAngular(Vector2 dir, out bool arrived)
-    {
-        Vector3 moveDirHor = new Vector3(dir.x, 0, dir.y);
-        if (moveDirHor == Vector3.zero)
-        {
-            arrived = false;
-            return;
-        }
-        moveDirHor.Normalize();
-        Quaternion curRot = transform.rotation;
-        Quaternion lookRot = Quaternion.LookRotation(moveDirHor, Vector3.up);
-        float maxDegree = MoveDirAngularSpeed * Time.deltaTime;
-        if(Quaternion.Angle(curRot, lookRot) < maxDegree)
-        {
-            transform.rotation = lookRot;
-            arrived = true;
-        }
-        else
-        {
-            transform.rotation = Quaternion.RotateTowards(curRot, lookRot, maxDegree);
-            arrived = false;
-        }
-    }
+   
     public void RegisterInitialized(Action action)
     {
         if (m_isInit)

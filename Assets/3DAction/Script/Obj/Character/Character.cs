@@ -68,7 +68,7 @@ public class SkillPosSkill
         {
             m_SkillState = SkillState.Level0;
         }
-        else if (m_User.CheckSkillUseable() == false)
+        else if (m_User.CheckStateSkillUseable() == false)
         {
             m_SkillState = SkillState.CharacterStateUnUseableSkill;
         }
@@ -109,12 +109,7 @@ public abstract class Character : Bio
     [SerializeField] int m_CharacterID;
 
     CharacterAction m_CharacterAction;
-    float m_CurAttackDelay;
-
-    protected Bio m_AttackTarget;
     protected Dictionary<SkillPos, SkillPosSkill> D_SkillPosSkill;
-    protected CancellationTokenSource m_SkillCTS;
-    protected CancellationTokenSource m_AttackCTS;
 
     public CharacterData m_CharacterData { get; private set; }
     public int m_TeamID { get; private set; }
@@ -141,7 +136,6 @@ public abstract class Character : Bio
     protected override void Update()
     {
         base.Update();
-        m_CurAttackDelay += Time.deltaTime;
         SkillCooldownUpdate();
         CharacterActionUpdate();
     }
@@ -167,9 +161,21 @@ public abstract class Character : Bio
         }
     }
 
+    bool CharacterActionable()
+    {
+        if (m_ActionState != ActionState.Idle && m_ActionState != ActionState.Move)
+        {
+            return false;
+        }
+        return true;
+    }
     void OnInput(InputInfo info)
     {
-        switch(info.command)
+        if (CharacterActionable() == false)
+        {
+            return;
+        }
+        switch (info.command)
         {
             case InputCommandType.Move2GroundPos:
                 SetCharacterAction(CharacterAction.Move2Desti, info.groundPos);
@@ -234,6 +240,11 @@ public abstract class Character : Bio
     }
     void CharacterActionUpdate()
     {
+        if (CharacterActionable() == false)
+        {
+            SetCharacterAction(CharacterAction.Idle);
+            return;
+        }
         Bio target = null;
         switch(m_CharacterAction)
         {
@@ -244,19 +255,24 @@ public abstract class Character : Bio
                 }        
                 break;
             case CharacterAction.Move2Desti:
+                if(m_ActionState == ActionState.Idle)
+                {
+                    SetCharacterAction(CharacterAction.Idle);
+                }
                 break;
             case CharacterAction.Move2Object:
                 break;
             case CharacterAction.Stop:
                 break;
             case CharacterAction.Hold:
+                bool targetInRange = false;
                 if(m_AttackTarget == null)
                 {
                     //사거리 안의 가장 가까운 적 탐색
                     if (TryGetNearestTargetAttackRange(out target))
                     {
                         m_AttackTarget = target;
-                        CheckAttackDelay();
+                        targetInRange = true;
                     }
                 }
                 else
@@ -264,7 +280,7 @@ public abstract class Character : Bio
                     float dis2Target = (m_AttackTarget.transform.position - transform.position).VT2XZ().magnitude;
                     if (dis2Target <= GetAttackRange())
                     {
-                        CheckAttackDelay();
+                        targetInRange = true;
                     }
                     else
                     {
@@ -272,9 +288,13 @@ public abstract class Character : Bio
                         if (TryGetNearestTargetAttackRange(out target))
                         {
                             m_AttackTarget = target;
-                            CheckAttackDelay();
+                            targetInRange = true;
                         }
                     }
+                }
+                if (targetInRange && CheckAttackable())
+                {
+                    Attack();
                 }
                 break;
             case CharacterAction.AttackDesti:
@@ -293,12 +313,15 @@ public abstract class Character : Bio
                     float dis2Target = (m_AttackTarget.transform.position - transform.position).VT2XZ().magnitude;
                     if (dis2Target > GetAttackRange())
                     {
-                        m_Move.Move(m_AttackTarget.transform.position);
+                        ChangeActionState(ActionState.Move, m_AttackTarget.transform.position);
                     }
                     else
                     {
-                        m_Move.MoveStop();
-                        CheckAttackDelay();
+                        ChangeActionState(ActionState.Idle);
+                        if (CheckAttackable())
+                        {
+                            Attack();
+                        }
                     }
                 }
                 break;
@@ -313,20 +336,15 @@ public abstract class Character : Bio
         switch (m_CharacterAction)
         {
             case CharacterAction.Move2Desti:
-                if (m_ActionState == ActionState.Attack)
-                {
-                    CancelAttack();
-                }
-                ChangeActionState(groundPos, );
+                ChangeActionState(ActionState.Move, groundPos);
                 break;
             case CharacterAction.Move2Object:
                 break;
             case CharacterAction.Stop:
-                m_Move.MoveStop();
-                CancelAttack();
+                ChangeActionState(ActionState.Idle);
                 break;
             case CharacterAction.Hold:
-                m_Move.MoveStop();
+                ChangeActionState(ActionState.Idle);
                 break;
             case CharacterAction.AttackDesti:
                 Bio nearestTarget = null;
@@ -342,7 +360,7 @@ public abstract class Character : Bio
                     }
                     else
                     {
-                        m_Move.Move(groundPos);
+                        ChangeActionState(ActionState.Move, groundPos);
                     }
                 }
                 break;
@@ -356,17 +374,6 @@ public abstract class Character : Bio
         }
     }
 
-    void CheckAttackDelay()
-    {
-        float attackDelay = 1 / m_Status.m_TotalAttackSpeed;
-        if (m_CurAttackDelay >= attackDelay)
-        {
-            if (TryAttack())
-            {
-                m_CurAttackDelay = 0;
-            }
-        }
-    }
     public void SetTeamID(int teamid)
     {
         m_TeamID = teamid;
@@ -385,6 +392,7 @@ public abstract class Character : Bio
             D_SkillPosSkill[skillPos].CheckState();
         }
     }
+  
     public virtual void SkillLevelUp(SkillPos skillPos)
     {
         if (m_Status.m_SkillLevelUpPoint > 0)
@@ -400,8 +408,7 @@ public abstract class Character : Bio
    
     
     protected abstract bool TryUseSkill(KeyCode key);
-    protected abstract bool TryAttack();
     public abstract float GetAttackRange();
-    public abstract void CancelAttack();
+
     public abstract void CancelSkill();
 }

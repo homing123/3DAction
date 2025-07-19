@@ -93,25 +93,15 @@ public class Vanya : Character
     }
     #region Attack
 
-    protected override bool TryAttack()
+    protected override void Attack()
     {
-        if (CheckAttackable())
-        {
-            return false;
-        }
-        if (m_AttackCTS != null)
-        {
-            m_AttackCTS.Dispose();
-        }
-        m_AttackCTS = new CancellationTokenSource();
+        base.Attack();
         BaseAttack(m_AttackCTS).Forget();
-        return true;
     }
 
 
     async UniTaskVoid BaseAttack(CancellationTokenSource cts)
     {
-        ChangeActionState(ActionState.Skill);
         Vector2 dir = (m_AttackTarget.transform.position - transform.position).VT2XZ().normalized;
         float rotTime = await RotToDir(dir, cts);
         if (cts.IsCancellationRequested)
@@ -134,6 +124,7 @@ public class Vanya : Character
 
         if (m_AttackTarget != null)
         {
+            Debug.Log("¿÷");
             float disToTarget = (transform.position - m_AttackTarget.transform.position).VT2XZ().magnitude;
             if (disToTarget <= GetAttackRange())
             {
@@ -145,14 +136,7 @@ public class Vanya : Character
 
         ChangeActionState(ActionState.Idle);
     }
-    public override void CancelAttack()
-    {
-        if (m_ActionState == ActionState.Attack)
-        {
-            m_AttackCTS.Cancel();
-            ChangeActionState(ActionState.Idle);
-        }
-    }
+   
     public override float GetAttackRange()
     {
         return m_Status.m_TotalAttackRange;

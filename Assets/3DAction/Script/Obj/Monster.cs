@@ -25,6 +25,10 @@ public class Monster : Bio
         //UI_HPBar.Create(m_Status);
     }
 
+    public override float GetAttackRange()
+    {
+        throw new NotImplementedException();
+    }
     protected override UniTaskVoid BaseAttack(CancellationTokenSource cts)
     {
         throw new NotImplementedException();

@@ -9,7 +9,6 @@ public class BioNaviMove : MonoBehaviour
 
     Action OnArrived;
     public bool IsMove { get { return !m_NavAgent.isStopped; } }
-    [SerializeField] Transform m_MoveDestiObj;
     private void Awake()
     {
         m_NavAgent = GetComponent<NavMeshAgent>();
@@ -45,17 +44,13 @@ public class BioNaviMove : MonoBehaviour
             OnArrived?.Invoke();
         }
     }
-    void MoveToDesti(Vector3 desti, Action acArrived = null)
+    public void MoveToDesti(Vector3 desti, Action acArrived = null)
     {
-        if (m_MoveDestiObj != null)
-        {
-            m_MoveDestiObj.transform.position = desti;
-        }
         m_NavAgent.isStopped = false;
         m_NavAgent.SetDestination(desti);
         OnArrived = acArrived;
     }
-    void MoveStop()
+    public void MoveStop()
     {
         m_NavAgent.isStopped = true;
     }

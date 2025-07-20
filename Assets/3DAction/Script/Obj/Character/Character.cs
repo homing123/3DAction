@@ -16,16 +16,14 @@ public class SkillPosSkill
     public SkillPos m_SkillPos { get; private set; }
 
     public event Action OnSkillPosSkillChanged;
-    public Action<CancellationTokenSource, SkillPosSkill> ac_SkillFunction { get; private set; }
     public SkillPosSkill(Character user, SkillPos skillPos)
     {
         m_User = user;
         m_SkillPos = skillPos;
     }
-    public void SetSkillFunctionAndSkillDatas(SkillData[] skillDatas, Action<CancellationTokenSource, SkillPosSkill> ac_skillFunction)
+    public void SetSkillFunctionAndSkillDatas(SkillData[] skillDatas)
     {
         m_SkillDatas = skillDatas;
-        ac_SkillFunction = ac_skillFunction;
     }
     public void CooldownSet(float cooldownSetValue)
     {
@@ -91,7 +89,6 @@ public class SkillPosSkill
 }
 public abstract class Character : Bio
 {
-    [Tooltip("어택땅 찍었을 때 찍은곳 주변의 적을 찾는 범위 반지름")] const float AttackDestiSearchRange = 8;
     [SerializeField] int m_CharacterID;
 
     ActionStateIdle m_ActionStateIdle;
@@ -100,9 +97,12 @@ public abstract class Character : Bio
     ActionStateHold m_ActionStateHold;
     ActionStateAttackDesti m_ActionStateAttackDesti;
     ActionStateChaseTarget m_ActionStateChaseTarget;
-    ActionStateSkill m_ActionStateSkill;
+    protected ActionStateSkill m_ActionStateSkill { get; private set; }
     protected Dictionary<SkillPos, SkillPosSkill> D_SkillPosSkill;
 
+    public event Action OnSkillPosSkillChanged;
+
+    public BioNaviMove m_BioNavMove { get; private set; }
     public CharacterData m_CharacterData { get; private set; }
     public int m_TeamID { get; private set; }
 
@@ -111,6 +111,7 @@ public abstract class Character : Bio
     protected override void Awake()
     {
         base.Awake();
+        m_BioNavMove = GetComponent<BioNaviMove>();
         PlayerM.Ins.RegisterCharacter(this);
         m_ActionStateIdle = new ActionStateIdle(this);
         m_ActionStateMoveToDesti = new ActionStateMoveToDesti(this);
@@ -118,8 +119,9 @@ public abstract class Character : Bio
         m_ActionStateHold = new ActionStateHold(this);
         m_ActionStateAttackDesti = new ActionStateAttackDesti(this);
         m_ActionStateChaseTarget = new ActionStateChaseTarget(this);
+        m_ActionStateAttack = new ActionStateAttack(this);
         m_ActionStateSkill = new ActionStateSkill(this);
-        m_CurActionState = m_ActionStateIdle;
+        ChangeActionState(ActionState.Idle);
         SkillPos[] enumArray = EnumArray<SkillPos>.GetArray();
         D_SkillPosSkill = new Dictionary<SkillPos, SkillPosSkill>(enumArray.Length);
         for(int i=0;i<enumArray.Length;i++)
@@ -161,64 +163,111 @@ public abstract class Character : Bio
         }
     }
 
-    bool CharacterActionable()
-    {
-        if (m_ActionState != ActionState.Idle && m_ActionState != ActionState.Move)
-        {
-            return false;
-        }
-        return true;
-    }
     void OnInput(InputInfo info)
     {
-        if (CharacterActionable() == false)
-        {
-            return;
-        }
         switch (info.command)
         {
             case InputCommandType.Move2GroundPos:
-                m_CurActionState = m_ActionStateMoveToDesti;
-                m_ActionStateMoveToDesti.SetMoveDesti(info.groundPos);
+                ChangeActionState(ActionState.MoveToDesti, info.groundPos);
                 break;
             case InputCommandType.Move2ObjectTarget:
                 //SetCharacterAction(CharacterAction.Move2Object, default, null, info.objectTarget);
                 break;
             case InputCommandType.Stop:
-                m_CurActionState = m_ActionStateStop;
+                ChangeActionState(ActionState.Stop);
                 break;
             case InputCommandType.Hold:
-                m_CurActionState = m_ActionStateHold;
+                ChangeActionState(ActionState.Hold);
                 break;
             case InputCommandType.AttackDesti:
-                m_CurActionState = m_ActionStateAttackDesti;
-                m_ActionStateAttackDesti.SetMoveDesti(info.groundPos);
+                ChangeActionState(ActionState.AttackDesti, info.groundPos);
                 break;
             case InputCommandType.ChaseTarget2Monster:
-                m_CurActionState = m_ActionStateChaseTarget;
-                m_ActionStateChaseTarget.SetTarget(info.monsterTarget);
+                ChangeActionState(ActionState.ChaseTarget, default, info.monsterTarget);
                 break;
             case InputCommandType.ChaseTarget2Character:
-                m_CurActionState = m_ActionStateChaseTarget;
-                m_ActionStateChaseTarget.SetTarget(info.characterTarget);
+                ChangeActionState(ActionState.ChaseTarget, default, info.characterTarget);
+                break;
+            case InputCommandType.ChaseTarget2Sandbag:
+                ChangeActionState(ActionState.ChaseTarget, default, info.sandbagTarget);
                 break;
             case InputCommandType.UseSkill:
-                m_CurActionState = m_ActionStateSkill;
-                //TryUseSkill(info.skillKey);
+                ChangeActionState(ActionState.Skill, default, null, info.skillKey);
                 break;
         }
-        m_CurActionState.StateChange();
     }
-    bool GetNearestTargetAttackRange(out Bio target)
+
+    public override void ChangeActionState(ActionState actionState, Vector3 groundPos = default, Bio target = null, SkillPos skillPos = 0)
+    {
+        switch(actionState)
+        {
+            case ActionState.Attack:
+                if (CheckAttackable() == false)
+                {
+                    return;
+                }
+                break;
+            case ActionState.Skill:
+                if (D_SkillPosSkill[skillPos].m_SkillState != SkillState.Useable)
+                {
+                    UI_SkillFailText.SetSkillState(D_SkillPosSkill[skillPos].m_SkillState);
+                    return;
+                }
+                break;
+        }
+
+        if (m_CurActionState != null)
+        {
+            m_CurActionState.StateLast();
+        }
+
+        switch (actionState)
+        {
+            case ActionState.Idle:
+                m_CurActionState = m_ActionStateIdle;
+                break;
+            case ActionState.MoveToDesti:
+                m_CurActionState = m_ActionStateMoveToDesti;
+                m_ActionStateMoveToDesti.SetMoveDesti(groundPos);
+                break;
+            case ActionState.Stop:
+                m_CurActionState = m_ActionStateStop;
+                break;
+            case ActionState.Hold:
+                m_CurActionState = m_ActionStateHold;
+                break;
+            case ActionState.AttackDesti:
+                m_CurActionState = m_ActionStateAttackDesti;
+                m_ActionStateAttackDesti.SetMoveDesti(groundPos);
+                break;
+            case ActionState.ChaseTarget:
+                m_CurActionState = m_ActionStateChaseTarget;
+                m_ActionStateChaseTarget.SetTarget(target);
+                break;
+            case ActionState.Attack:
+                m_CurActionState = m_ActionStateAttack;
+                m_ActionStateAttack.Set(target, m_CurActionStateType);
+                break;
+            case ActionState.Skill:
+                m_CurActionState = m_ActionStateSkill;
+                m_ActionStateSkill.Set(skillPos);
+                break;
+        }
+        Debug.Log($"ActionState Change {m_CurActionStateType} => {actionState}");
+        m_CurActionStateType = actionState;
+        m_CurActionState.StateStart();
+    }
+    #region SearchTarget
+    public bool GetNearestTargetAttackRange(out Bio target)
     {
         return GetNearestTarget(transform.position, GetAttackRange(), out target);
     }
-    bool GetNearestTarget(Vector3 pos, float radius, out Bio target)
+    public bool GetNearestTarget(Vector3 pos, float radius, out Bio target)
     {
         target = null;
         float closestSqrDist = float.MaxValue;
 
-        foreach (var hit in Physics.OverlapSphere(pos, radius, 1 << (int)Layer.Character))
+        foreach (var hit in Physics.OverlapSphere(pos, radius, (1 << (int)Layer.Character) | (1 << (int)Layer.Sandbag)))
         {
             Bio candidate = null;
 
@@ -244,196 +293,64 @@ public abstract class Character : Bio
 
         return target != null;
     }
-    //void CharacterActionUpdate()
-    //{
-    //    if (CharacterActionable() == false)
-    //    {
-    //        SetCharacterAction(CharacterAction.Idle);
-    //        return;
-    //    }
-    //    Bio target = null;
-    //    switch(m_CharacterAction)
-    //    {
-    //        case CharacterAction.Idle:
-    //            if (TryGetNearestTargetAttackRange(out target))
-    //            {
-    //                SetCharacterAction(CharacterAction.ChaseTarget, default, target);
-    //            }        
-    //            break;
-    //        case CharacterAction.Move2Desti:
-    //            if(m_ActionState == ActionState.Idle)
-    //            {
-    //                SetCharacterAction(CharacterAction.Idle);
-    //            }
-    //            break;
-    //        case CharacterAction.Move2Object:
-    //            break;
-    //        case CharacterAction.Stop:
-    //            break;
-    //        case CharacterAction.Hold:
-    //            bool targetInRange = false;
-    //            if(m_AttackTarget == null)
-    //            {
-    //                //사거리 안의 가장 가까운 적 탐색
-    //                if (TryGetNearestTargetAttackRange(out target))
-    //                {
-    //                    m_AttackTarget = target;
-    //                    targetInRange = true;
-    //                }
-    //            }
-    //            else
-    //            {
-    //                float dis2Target = (m_AttackTarget.transform.position - transform.position).VT2XZ().magnitude;
-    //                if (dis2Target <= GetAttackRange())
-    //                {
-    //                    targetInRange = true;
-    //                }
-    //                else
-    //                {
-    //                    m_AttackTarget = null;
-    //                    if (TryGetNearestTargetAttackRange(out target))
-    //                    {
-    //                        m_AttackTarget = target;
-    //                        targetInRange = true;
-    //                    }
-    //                }
-    //            }
-    //            if (targetInRange && CheckAttackable())
-    //            {
-    //                Attack();
-    //            }
-    //            break;
-    //        case CharacterAction.AttackDesti:
-    //            if (TryGetNearestTargetAttackRange(out target))
-    //            {
-    //                SetCharacterAction(CharacterAction.ChaseTarget, default, m_AttackTarget);
-    //            }
-    //            break;
-    //        case CharacterAction.ChaseTarget:
-    //            if(m_AttackTarget == null)
-    //            {
-    //                SetCharacterAction(CharacterAction.Idle);
-    //            }
-    //            else
-    //            {
-    //                float dis2Target = (m_AttackTarget.transform.position - transform.position).VT2XZ().magnitude;
-    //                if (dis2Target > GetAttackRange())
-    //                {
-    //                    ChangeActionState(ActionState.Move, m_AttackTarget.transform.position);
-    //                }
-    //                else
-    //                {
-    //                    ChangeActionState(ActionState.Idle);
-    //                    if (CheckAttackable())
-    //                    {
-    //                        Attack();
-    //                    }
-    //                }
-    //            }
-    //            break;
-    //    }
-    //}
-
-    //void SetCharacterAction(CharacterAction CharacterAction, Vector3 groundPos = default, Bio target = null, Transform obj = null)
-    //{
-    //    m_CharacterAction = CharacterAction;
-    //    m_AttackTarget = null;
-
-    //    switch (m_CharacterAction)
-    //    {
-    //        case CharacterAction.Move2Desti:
-    //            ChangeActionState(ActionState.Move, groundPos);
-    //            break;
-    //        case CharacterAction.Move2Object:
-    //            break;
-    //        case CharacterAction.Stop:
-    //            ChangeActionState(ActionState.Idle);
-    //            break;
-    //        case CharacterAction.Hold:
-    //            ChangeActionState(ActionState.Idle);
-    //            break;
-    //        case CharacterAction.AttackDesti:
-    //            Bio nearestTarget = null;
-    //            if(TryGetNearestTarget(groundPos, AttackDestiSearchRange, out nearestTarget))
-    //            {
-    //                SetCharacterAction(CharacterAction.ChaseTarget, default, nearestTarget);
-    //            }
-    //            else
-    //            {
-    //                if (TryGetNearestTargetAttackRange(out nearestTarget))
-    //                {
-    //                    SetCharacterAction(CharacterAction.ChaseTarget, default, nearestTarget);
-    //                }
-    //                else
-    //                {
-    //                    ChangeActionState(ActionState.Move, groundPos);
-    //                }
-    //            }
-    //            break;
-    //        case CharacterAction.ChaseTarget:
-    //            if(m_AttackTarget != null && m_AttackTarget != target)
-    //            {
-    //                CancelAttack();
-    //            }
-    //            m_AttackTarget = target;
-    //            break;
-    //    }
-    //}
-    bool TryUseSkill(KeyCode key)
+    #endregion
+    #region Skill
+    public bool CheckStateSkillUseable()
     {
-        SkillPos skillPos = SkillPos.Q;
-        switch (key)
+        if(m_CurActionStateType == ActionState.Skill)
         {
-            case KeyCode.Q:
-                skillPos = SkillPos.Q;
-                break;
-            case KeyCode.W:
-                skillPos = SkillPos.W;
-                break;
-            case KeyCode.E:
-                skillPos = SkillPos.E;
-                break;
-            case KeyCode.R:
-                skillPos = SkillPos.R;
-                break;
-            case KeyCode.D:
-                skillPos = SkillPos.Weapon;
-                break;
-            case KeyCode.F:
-                skillPos = SkillPos.Spell;
-                break;
-            default:
-                return false;
-        }
-        if (D_SkillPosSkill[skillPos].m_SkillState == SkillState.Useable)
-        {
-            CancelAttack();
-            if (m_SkillCTS != null)
-            {
-                m_SkillCTS.Dispose();
-            }
-            m_SkillCTS = new CancellationTokenSource();
-            D_SkillPosSkill[skillPos].ac_SkillFunction?.Invoke(m_SkillCTS, D_SkillPosSkill[skillPos]);
-            return true;
-        }
-        else
-        {
-            UI_SkillFailText.SetSkillState(D_SkillPosSkill[skillPos].m_SkillState);
             return false;
         }
+        CCState[] UnableCC = { CCState.Knockback, CCState.Stun };
+        for (int i = 0; i < UnableCC.Length; i++)
+        {
+            if ((m_CCState & (uint)UnableCC[i]) > 0)
+            {
+                return false;
+            }
+        }
+        return true;
     }
-    void SkillEnd()
+    public void UseSkill(SkillPos skillPos)
     {
-        m_SkillCTS.Dispose();
-        m_SkillCTS = null;
+        CancelAttack();
+        if (m_SkillCTS != null)
+        {
+            m_SkillCTS.Dispose();
+        }
+        m_SkillCTS = new CancellationTokenSource();
+        switch (skillPos)
+        {
+            case SkillPos.Q:
+                QSkill(m_SkillCTS, D_SkillPosSkill[skillPos]).Forget();
+                break;
+            case SkillPos.W:
+                WSkill(m_SkillCTS, D_SkillPosSkill[skillPos]).Forget();
+                break;
+            case SkillPos.E:
+                ESkill(m_SkillCTS, D_SkillPosSkill[skillPos]).Forget();
+                break;
+            case SkillPos.R:
+                RSkill(m_SkillCTS, D_SkillPosSkill[skillPos]).Forget();
+                break;
+            case SkillPos.Weapon:
+                //Skill(m_SkillCTS, D_SkillPosSkill[skillPos]).Forget();
+                break;
+            case SkillPos.Spell:
+                //QSkill(m_SkillCTS, D_SkillPosSkill[skillPos]).Forget();
+                break;
+        }
     }
-    void SkillCancel()
+    protected void SkillEnd()
     {
-        if(m_SkillCTS != null)
+        ChangeActionState(ActionState.Idle);
+    }
+    protected void SkillCancel()
+    {
+        if(m_CurActionStateType == ActionState.Skill)
         {
             m_SkillCTS.Cancel();
-            m_SkillCTS.Dispose();
-            m_SkillCTS = null;
+            SkillEnd();
         }
     }
     protected virtual void SkillCooldownUpdate()
@@ -463,11 +380,10 @@ public abstract class Character : Bio
     {
         return D_SkillPosSkill[skillPos];
     }
-   
-    
-    public abstract float GetAttackRange();
+
     protected abstract UniTaskVoid QSkill(CancellationTokenSource cts, SkillPosSkill skillPosSkill);
     protected abstract UniTaskVoid WSkill(CancellationTokenSource cts, SkillPosSkill skillPosSkill);
     protected abstract UniTaskVoid ESkill(CancellationTokenSource cts, SkillPosSkill skillPosSkill);
     protected abstract UniTaskVoid RSkill(CancellationTokenSource cts, SkillPosSkill skillPosSkill);
+    #endregion
 }

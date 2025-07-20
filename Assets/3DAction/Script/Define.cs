@@ -6,7 +6,8 @@ public enum Layer
     Ground = 6,
     Character = 7,
     Monster = 8,
-    Object = 9
+    Object = 9,
+    Sandbag = 10
 }
 
 public class Define
@@ -17,6 +18,7 @@ public class Define
         {Layer.Character, 1<< (int)Layer.Character },
         {Layer.Monster, 1<< (int)Layer.Monster },
         {Layer.Object, 1<< (int)Layer.Object },
+        {Layer.Sandbag, 1<< (int)Layer.Sandbag },
     };
 
 }

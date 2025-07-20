@@ -31,15 +31,17 @@ public abstract class Bio : MonoBehaviour
     //공통 애니메이션 이름
 
     [SerializeField] Bio_Type m_BioType;
-    float m_CurAttackDelay;
+    protected float m_CurAttackDelay;
     Vector2 m_LastPos;
     float[] m_CCTime;
 
     protected bool m_isInit;
-    protected Bio m_AttackTarget;
     protected CancellationTokenSource m_SkillCTS;
     protected CancellationTokenSource m_AttackCTS;
     protected IActionState m_CurActionState;
+    protected ActionState m_CurActionStateType;
+    protected ActionStateAttack m_ActionStateAttack;
+
 
     public Vector3 m_MoveDesti { get; private set; }
     public Vector2 m_CurMoveDir { get; private set; }
@@ -169,18 +171,11 @@ public abstract class Bio : MonoBehaviour
         return true;
 
     }
-    public bool CheckStateSkillUseable()
+    public virtual void ChangeActionState(ActionState actionState, Vector3 groundPos = default, Bio target = null, SkillPos skillPos = 0)
     {
-        CCState[] UnableCC = { CCState.Knockback, CCState.Stun };
-        for (int i = 0; i < UnableCC.Length; i++)
-        {
-            if ((m_CCState & (uint)UnableCC[i]) > 0)
-            {
-                return false;
-            }
-        }
-        return true;
+
     }
+   
 
     public void AttackOverlap(in HitRangeInfo hitRangeInfo, in SkillAttackInfo dmginfo)
     {
@@ -273,28 +268,35 @@ public abstract class Bio : MonoBehaviour
 
     #endregion
     #region Attack
-    protected void Attack()
+    public void Attack()
     {
-        m_CurAttackDelay = 0;
+        if(m_AttackCTS!= null)
+        {
+            m_AttackCTS.Dispose();
+        }
         m_AttackCTS = new CancellationTokenSource();
         BaseAttack(m_AttackCTS).Forget();
     }
     protected void AttackEnd()
     {
-        m_AttackCTS.Dispose();
-        m_AttackCTS = null;
+        if(m_ActionStateAttack.m_LastActionState == ActionState.Hold)
+        {
+            ChangeActionState(ActionState.Hold);
+        }
+        else if(m_ActionStateAttack.m_LastActionState == ActionState.ChaseTarget)
+        {
+            ChangeActionState(ActionState.ChaseTarget, default, m_ActionStateAttack.m_Target);
+        }
     }
-    protected void CancelAttack()
+    public void CancelAttack()
     {
-        if (m_AttackCTS != null)
+        if (m_CurActionStateType == ActionState.Attack)
         {
             m_AttackCTS.Cancel();
-            m_AttackCTS.Dispose();
-            m_AttackCTS = null;
         }
     }
     #endregion
-
+   
     public virtual Vector3 GetHitPos()
     {
         return transform.position + Vector3.up * 1.2f;
@@ -351,4 +353,6 @@ public abstract class Bio : MonoBehaviour
 
 
     protected abstract UniTaskVoid BaseAttack(CancellationTokenSource cts);
+    public abstract float GetAttackRange();
+
 }

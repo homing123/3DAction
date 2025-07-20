@@ -6,6 +6,7 @@ public class Sandbag : Bio
 {
     [SerializeField] bool m_IsHeal;
 
+    ActionStateStop m_ActionStateStop;
     protected override void Awake()
     {
         base.Awake();
@@ -16,6 +17,9 @@ public class Sandbag : Bio
         m_Status.SandbagStatusInit();
         m_isInit = true;
         OnInitialized?.Invoke();
+        m_ActionStateStop = new ActionStateStop(this);
+        m_CurActionState = m_ActionStateStop;
+        m_CurActionStateType = ActionState.Stop;
     }
     protected override void Update()
     {
@@ -26,6 +30,10 @@ public class Sandbag : Bio
         }
     }
     protected override UniTaskVoid BaseAttack(CancellationTokenSource cts)
+    {
+        throw new System.NotImplementedException();
+    }
+    public override float GetAttackRange()
     {
         throw new System.NotImplementedException();
     }

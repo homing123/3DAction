@@ -19,8 +19,9 @@ public enum InputCommandType
     AttackDesti = 4,
     ChaseTarget2Monster = 5,
     ChaseTarget2Character = 6,
-    UseSkill = 7,
-    ViewInfo = 8
+    ChaseTarget2Sandbag = 7,
+    UseSkill = 8,
+    ViewInfo = 9
 }
 public struct InputInfo
 {
@@ -28,8 +29,9 @@ public struct InputInfo
     public Vector3 groundPos;
     public Character characterTarget;
     public Monster monsterTarget;
+    public Sandbag sandbagTarget;
     public Transform objectTarget;
-    public KeyCode skillKey;
+    public SkillPos skillKey;
 }
 
 public class PlayerInput : MonoBehaviour
@@ -39,6 +41,7 @@ public class PlayerInput : MonoBehaviour
     {
         Character,
         Monster,
+        Sandbag,
         Object,
         None
     }
@@ -48,6 +51,7 @@ public class PlayerInput : MonoBehaviour
     Vector3 m_MouseGroundPos;
     Character m_CharacterTarget;
     Monster m_MonsterTarget;
+    Sandbag m_SandbagTarget;
     Transform m_ObjectTarget;
     int m_RayLayerMask;
     bool m_isAttack;
@@ -63,7 +67,7 @@ public class PlayerInput : MonoBehaviour
     }
     private void Start()
     {
-        m_RayLayerMask = Define.D_LayerMask[Layer.Character] | Define.D_LayerMask[Layer.Monster] | Define.D_LayerMask[Layer.Object] | Define.D_LayerMask[Layer.Ground];
+        m_RayLayerMask = Define.D_LayerMask[Layer.Character] | Define.D_LayerMask[Layer.Monster]| Define.D_LayerMask[Layer.Sandbag] | Define.D_LayerMask[Layer.Object] | Define.D_LayerMask[Layer.Ground];
     }
     private void Update()
     {
@@ -110,6 +114,10 @@ public class PlayerInput : MonoBehaviour
                         inputinfo.command = InputCommandType.ChaseTarget2Monster;
                         inputinfo.monsterTarget = m_MonsterTarget;
                         break;
+                    case MouseTargetType.Sandbag:
+                        inputinfo.command = InputCommandType.ChaseTarget2Sandbag;
+                        inputinfo.sandbagTarget = m_SandbagTarget;
+                        break;
                 }
             }
         }
@@ -136,6 +144,10 @@ public class PlayerInput : MonoBehaviour
                     inputinfo.command = InputCommandType.ChaseTarget2Monster;
                     inputinfo.monsterTarget = m_MonsterTarget;
                     break;
+                case MouseTargetType.Sandbag:
+                    inputinfo.command = InputCommandType.ChaseTarget2Sandbag;
+                    inputinfo.sandbagTarget = m_SandbagTarget;
+                    break;
             }
             
         }
@@ -147,42 +159,42 @@ public class PlayerInput : MonoBehaviour
             isInput = true;
             inputinfo = default;
             inputinfo.command = InputCommandType.UseSkill;
-            inputinfo.skillKey = KeyCode.Q;
+            inputinfo.skillKey = SkillPos.Q;
         }
         if (Input.GetKeyDown(KeyCode.W))
         {
             isInput = true;
             inputinfo = default;
             inputinfo.command = InputCommandType.UseSkill;
-            inputinfo.skillKey = KeyCode.W;
+            inputinfo.skillKey = SkillPos.W;
         }
         if (Input.GetKeyDown(KeyCode.E))
         {
             isInput = true;
             inputinfo = default;
             inputinfo.command = InputCommandType.UseSkill;
-            inputinfo.skillKey = KeyCode.E;
+            inputinfo.skillKey = SkillPos.E;
         }
         if (Input.GetKeyDown(KeyCode.R))
         {
             isInput = true;
             inputinfo = default;
             inputinfo.command = InputCommandType.UseSkill;
-            inputinfo.skillKey = KeyCode.R;
+            inputinfo.skillKey = SkillPos.R;
         }
         if (Input.GetKeyDown(KeyCode.D))
         {
             isInput = true;
             inputinfo = default;
             inputinfo.command = InputCommandType.UseSkill;
-            inputinfo.skillKey = KeyCode.D;
+            inputinfo.skillKey = SkillPos.Weapon;
         }
         if (Input.GetKeyDown(KeyCode.F))
         {
             isInput = true;
             inputinfo = default;
             inputinfo.command = InputCommandType.UseSkill;
-            inputinfo.skillKey = KeyCode.F;
+            inputinfo.skillKey = SkillPos.Spell;
         }
 
         if(isInput)
@@ -240,6 +252,10 @@ public class PlayerInput : MonoBehaviour
                 case (int)Layer.Monster:
                     m_MouseTargetType = MouseTargetType.Monster;
                     m_MonsterTarget = hit.transform.GetComponent<Monster>();
+                    break;
+                case (int)Layer.Sandbag:
+                    m_MouseTargetType = MouseTargetType.Sandbag;
+                    m_SandbagTarget = hit.transform.GetComponent<Sandbag>();
                     break;
                 case (int)Layer.Object:
                     m_MouseTargetType = MouseTargetType.Object;
